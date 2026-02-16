@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEncontros } from "../data/encontrosStore";
 import { type Encontro, type EncontroPreco, type EncontroTipo } from "../data/mockEncontros";
 import FloatingCreateButton from "../components/FloatingCreateButton";
+import AvaliacaoInfo, { getMedalhaAvaliacao } from "../components/AvaliacaoInfo";
 
 type TipoFiltro = "todos" | EncontroTipo;
 type PrecoFiltro = "todos" | EncontroPreco;
@@ -47,6 +48,7 @@ const imageByTipo: Record<EncontroTipo, string> = {
 function CardEncontro({ item }: { item: Encontro }) {
   const vagasRestantes = item.capacidade - item.participantes;
   const statusVaga = vagasRestantes > 0 ? `${vagasRestantes} vagas` : "Lotado";
+  const medalha = getMedalhaAvaliacao(item.nota, item.totalAvaliacoes);
 
   return (
     <Pressable
@@ -75,6 +77,14 @@ function CardEncontro({ item }: { item: Encontro }) {
             </Text>
           </View>
         </View>
+        <View style={styles.ratingRow}>
+          <AvaliacaoInfo nota={item.nota} totalAvaliacoes={item.totalAvaliacoes} />
+          {medalha && (
+            <View style={styles.medalhaChip}>
+              <Text style={styles.medalhaText}>{medalha}</Text>
+            </View>
+          )}
+        </View>
 
         <Text style={styles.title}>{item.titulo}</Text>
         <Text style={styles.description} numberOfLines={2}>
@@ -89,7 +99,7 @@ function CardEncontro({ item }: { item: Encontro }) {
         </View>
 
         <View style={styles.footerRow}>
-          <Text style={styles.hostText}>{`Anfitriao: ${item.anfitriao}`}</Text>
+          <Text style={styles.hostText}>{`Friend: ${item.anfitriao}`}</Text>
           <Text style={[styles.vagaText, vagasRestantes <= 2 && styles.vagaTextUrgente]}>{statusVaga}</Text>
         </View>
       </View>
@@ -323,6 +333,25 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: "#0F172A",
+  },
+  ratingRow: {
+    marginTop: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  medalhaChip: {
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: "#FFF7E6",
+    borderWidth: 1,
+    borderColor: "#FCD34D",
+  },
+  medalhaText: {
+    fontSize: 11,
+    color: "#92400E",
+    fontWeight: "700",
   },
   description: {
     fontSize: 13,

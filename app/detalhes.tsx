@@ -3,6 +3,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useEncontros } from "./data/encontrosStore";
 import { type EncontroTipo } from "./data/mockEncontros";
+import AvaliacaoInfo, { getMedalhaAvaliacao } from "./components/AvaliacaoInfo";
 
 const tipoLabel: Record<EncontroTipo, string> = {
   esporte: "Esporte",
@@ -40,6 +41,7 @@ export default function Detalhes() {
 
   const vagasRestantes = encontro.capacidade - encontro.participantes;
   const imageSource = encontro.imagemUrl || fallbackImageByTipo[encontro.tipo];
+  const medalha = getMedalhaAvaliacao(encontro.nota, encontro.totalAvaliacoes);
 
   return (
     <View style={styles.container}>
@@ -64,7 +66,15 @@ export default function Detalhes() {
           </View>
 
           <Text style={styles.title}>{encontro.titulo}</Text>
-          <Text style={styles.subtitle}>{`Organizado por ${encontro.anfitriao}`}</Text>
+          <Text style={styles.subtitle}>{`Friend: ${encontro.anfitriao}`}</Text>
+          <View style={styles.ratingRow}>
+            <AvaliacaoInfo nota={encontro.nota} totalAvaliacoes={encontro.totalAvaliacoes} />
+            {medalha && (
+              <View style={styles.medalhaChip}>
+                <Text style={styles.medalhaText}>{medalha}</Text>
+              </View>
+            )}
+          </View>
 
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
@@ -169,6 +179,25 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 14,
     color: "#64748B",
+  },
+  ratingRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  medalhaChip: {
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    backgroundColor: "#FFF7E6",
+    borderWidth: 1,
+    borderColor: "#FCD34D",
+  },
+  medalhaText: {
+    fontSize: 11,
+    color: "#92400E",
+    fontWeight: "700",
   },
   infoCard: {
     marginTop: 14,

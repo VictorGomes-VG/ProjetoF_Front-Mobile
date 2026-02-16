@@ -14,6 +14,8 @@ export type Encontro = {
   bairro: string;
   endereco: string;
   imagemUrl?: string;
+  nota: number;
+  totalAvaliacoes: number;
   participantes: number;
   capacidade: number;
   latitude: number;
@@ -33,6 +35,8 @@ export const encontrosMock: Encontro[] = [
     bairro: "Moema",
     endereco: "Portao 3, Parque Ibirapuera",
     imagemUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1200&q=80",
+    nota: 4.8,
+    totalAvaliacoes: 52,
     participantes: 18,
     capacidade: 25,
     latitude: -23.587416,
@@ -50,6 +54,8 @@ export const encontrosMock: Encontro[] = [
     bairro: "Vila Madalena",
     endereco: "Rua Harmonia, 312",
     imagemUrl: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80",
+    nota: 4.6,
+    totalAvaliacoes: 39,
     participantes: 34,
     capacidade: 40,
     latitude: -23.5568,
@@ -67,6 +73,8 @@ export const encontrosMock: Encontro[] = [
     bairro: "Pinheiros",
     endereco: "Av. Pedroso de Morais, 510",
     imagemUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80",
+    nota: 4.7,
+    totalAvaliacoes: 27,
     participantes: 12,
     capacidade: 16,
     latitude: -23.5675,
@@ -84,6 +92,8 @@ export const encontrosMock: Encontro[] = [
     bairro: "Consolacao",
     endereco: "Rua Augusta, 900",
     imagemUrl: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1200&q=80",
+    nota: 4.5,
+    totalAvaliacoes: 31,
     participantes: 20,
     capacidade: 24,
     latitude: -23.5532,
@@ -101,6 +111,8 @@ export const encontrosMock: Encontro[] = [
     bairro: "Paulista",
     endereco: "Alameda Santos, 1437",
     imagemUrl: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80",
+    nota: 4.9,
+    totalAvaliacoes: 68,
     participantes: 10,
     capacidade: 14,
     latitude: -23.5614,
@@ -118,6 +130,8 @@ export const encontrosMock: Encontro[] = [
     bairro: "Butanta",
     endereco: "Praca Elis Regina, 40",
     imagemUrl: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80",
+    nota: 4.4,
+    totalAvaliacoes: 22,
     participantes: 9,
     capacidade: 12,
     latitude: -23.5713,

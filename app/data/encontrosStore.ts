@@ -17,6 +17,8 @@ export type NovoEncontroInput = {
   bairro: string;
   endereco: string;
   imagemUrl?: string;
+  nota?: number;
+  totalAvaliacoes?: number;
   participantes: number;
   capacidade: number;
   latitude: number;
@@ -46,6 +48,8 @@ export function addEncontro(input: NovoEncontroInput) {
   const novoEncontro: Encontro = {
     id: `enc-${Date.now()}`,
     ...input,
+    nota: input.nota ?? 5,
+    totalAvaliacoes: input.totalAvaliacoes ?? 1,
   };
 
   encontrosState = [novoEncontro, ...encontrosState];

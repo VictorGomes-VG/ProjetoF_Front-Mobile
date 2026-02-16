@@ -7,6 +7,7 @@ import { router } from "expo-router";
 import { useEncontros } from "../data/encontrosStore";
 import { type Encontro, type EncontroPreco, type EncontroTipo } from "../data/mockEncontros";
 import FloatingCreateButton from "../components/FloatingCreateButton";
+import AvaliacaoInfo, { getMedalhaAvaliacao } from "../components/AvaliacaoInfo";
 
 type TipoFiltro = "todos" | EncontroTipo;
 type PrecoFiltro = "todos" | EncontroPreco;
@@ -192,6 +193,16 @@ export default function Buscar() {
               />
               <View style={styles.previewBody}>
                 <Text style={styles.bottomTitle}>{selecionado.titulo}</Text>
+                <View style={styles.previewRatingRow}>
+                  <AvaliacaoInfo nota={selecionado.nota} totalAvaliacoes={selecionado.totalAvaliacoes} />
+                  {getMedalhaAvaliacao(selecionado.nota, selecionado.totalAvaliacoes) && (
+                    <View style={styles.previewMedalha}>
+                      <Text style={styles.previewMedalhaText}>
+                        {getMedalhaAvaliacao(selecionado.nota, selecionado.totalAvaliacoes)}
+                      </Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={styles.bottomText}>{`${labelsTipo[selecionado.tipo]} | ${selecionado.bairro}`}</Text>
                 <Text style={styles.bottomText}>{`${selecionado.participantes}/${selecionado.capacidade} participantes`}</Text>
                 <Text style={styles.bottomText}>{`${selecionado.data} | ${selecionado.hora}`}</Text>
@@ -343,6 +354,26 @@ const styles = StyleSheet.create({
   },
   previewBody: {
     padding: 14,
+  },
+  previewRatingRow: {
+    marginTop: 2,
+    marginBottom: 3,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  previewMedalha: {
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: "#FFF7E6",
+    borderWidth: 1,
+    borderColor: "#FCD34D",
+  },
+  previewMedalhaText: {
+    fontSize: 11,
+    color: "#92400E",
+    fontWeight: "700",
   },
   bottomTitle: {
     fontSize: 17,
