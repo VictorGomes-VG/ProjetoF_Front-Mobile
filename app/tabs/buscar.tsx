@@ -92,9 +92,12 @@ export default function Buscar() {
             key={encontro.id}
             coordinate={{ latitude: encontro.latitude, longitude: encontro.longitude }}
             onPress={() => setSelecionado(encontro)}
+            anchor={{ x: 0.5, y: 0.5 }}
           >
-            <View style={[styles.customPin, { backgroundColor: corPorTipo[encontro.tipo] }]}>
-              <Ionicons name={iconePorTipo[encontro.tipo]} color="#fff" size={14} />
+            <View style={styles.pinWrap}>
+              <View style={[styles.customPin, { backgroundColor: corPorTipo[encontro.tipo] }]}>
+                <Ionicons name={iconePorTipo[encontro.tipo]} color="#fff" size={15} />
+              </View>
             </View>
             <Callout onPress={() => setSelecionado(encontro)}>
               <View style={styles.callout}>
@@ -382,13 +385,24 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   customPin: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
     borderColor: "#fff",
+    elevation: 2,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  pinWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 34,
+    height: 34,
   },
   callout: {
     minWidth: 170,
