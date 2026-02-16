@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { encontrosMock } from "../data/mockEncontros";
+import { useEncontros } from "../data/encontrosStore";
 
 export default function Perfil() {
+  const encontros = useEncontros();
   const [nome, setNome] = useState("Victor");
   const [idade, setIdade] = useState("24");
   const [cidade, setCidade] = useState("Sao Paulo");
@@ -13,8 +14,8 @@ export default function Perfil() {
   const [mostrarLocalizacao, setMostrarLocalizacao] = useState(true);
 
   const totalComVaga = useMemo(
-    () => encontrosMock.filter((item) => item.participantes < item.capacidade).length,
-    []
+    () => encontros.filter((item) => item.participantes < item.capacidade).length,
+    [encontros]
   );
 
   return (
@@ -31,7 +32,7 @@ export default function Perfil() {
 
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{encontrosMock.length}</Text>
+          <Text style={styles.statValue}>{encontros.length}</Text>
           <Text style={styles.statLabel}>Encontros ativos</Text>
         </View>
         <View style={styles.statCard}>

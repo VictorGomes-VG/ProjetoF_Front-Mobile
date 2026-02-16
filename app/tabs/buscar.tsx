@@ -4,7 +4,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import MapView, { Callout, Marker } from "react-native-maps";
 import { router } from "expo-router";
-import { encontrosMock, type Encontro, type EncontroPreco, type EncontroTipo } from "../data/mockEncontros";
+import { useEncontros } from "../data/encontrosStore";
+import { type Encontro, type EncontroPreco, type EncontroTipo } from "../data/mockEncontros";
+import FloatingCreateButton from "../components/FloatingCreateButton";
 
 type TipoFiltro = "todos" | EncontroTipo;
 type PrecoFiltro = "todos" | EncontroPreco;
@@ -44,6 +46,7 @@ const iconePorTipo: Record<EncontroTipo, keyof typeof Ionicons.glyphMap> = {
 };
 
 export default function Buscar() {
+  const encontros = useEncontros();
   const [tipoFiltro, setTipoFiltro] = useState<TipoFiltro>("todos");
   const [precoFiltro, setPrecoFiltro] = useState<PrecoFiltro>("todos");
   const [apenasComVaga, setApenasComVaga] = useState(false);
@@ -53,7 +56,7 @@ export default function Buscar() {
 
   const encontrosFiltrados = useMemo(() => {
     const texto = busca.trim().toLowerCase();
-    return encontrosMock.filter((encontro) => {
+    return encontros.filter((encontro) => {
       const matchTipo = tipoFiltro === "todos" || encontro.tipo === tipoFiltro;
       const matchPreco = precoFiltro === "todos" || encontro.preco === precoFiltro;
       const matchBusca =
@@ -63,7 +66,7 @@ export default function Buscar() {
       const matchVaga = !apenasComVaga || encontro.participantes < encontro.capacidade;
       return matchTipo && matchPreco && matchBusca && matchVaga;
     });
-  }, [apenasComVaga, busca, precoFiltro, tipoFiltro]);
+  }, [apenasComVaga, busca, encontros, precoFiltro, tipoFiltro]);
 
   return (
     <View style={styles.container}>
@@ -191,6 +194,7 @@ export default function Buscar() {
           </View>
         </View>
       )}
+      <FloatingCreateButton />
     </View>
   );
 }

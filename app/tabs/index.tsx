@@ -3,7 +3,9 @@ import { FlatList, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View }
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { encontrosMock, type Encontro, type EncontroPreco, type EncontroTipo } from "../data/mockEncontros";
+import { useEncontros } from "../data/encontrosStore";
+import { type Encontro, type EncontroPreco, type EncontroTipo } from "../data/mockEncontros";
+import FloatingCreateButton from "../components/FloatingCreateButton";
 
 type TipoFiltro = "todos" | EncontroTipo;
 type PrecoFiltro = "todos" | EncontroPreco;
@@ -96,19 +98,20 @@ function CardEncontro({ item }: { item: Encontro }) {
 }
 
 export default function Home() {
+  const encontros = useEncontros();
   const [modalFiltroAberto, setModalFiltroAberto] = useState(false);
   const [tipoFiltro, setTipoFiltro] = useState<TipoFiltro>("todos");
   const [precoFiltro, setPrecoFiltro] = useState<PrecoFiltro>("todos");
   const [apenasComVaga, setApenasComVaga] = useState(false);
 
   const encontrosFiltrados = useMemo(() => {
-    return encontrosMock.filter((encontro) => {
+    return encontros.filter((encontro) => {
       const okTipo = tipoFiltro === "todos" || encontro.tipo === tipoFiltro;
       const okPreco = precoFiltro === "todos" || encontro.preco === precoFiltro;
       const okVaga = !apenasComVaga || encontro.participantes < encontro.capacidade;
       return okTipo && okPreco && okVaga;
     });
-  }, [apenasComVaga, precoFiltro, tipoFiltro]);
+  }, [apenasComVaga, encontros, precoFiltro, tipoFiltro]);
 
   const totalFiltrosAtivos =
     (tipoFiltro !== "todos" ? 1 : 0) + (precoFiltro !== "todos" ? 1 : 0) + (apenasComVaga ? 1 : 0);
@@ -138,6 +141,7 @@ export default function Home() {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />
+      <FloatingCreateButton />
 
       <Modal visible={modalFiltroAberto} transparent animationType="fade" onRequestClose={() => setModalFiltroAberto(false)}>
         <View style={styles.modalBackdrop}>

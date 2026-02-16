@@ -2,7 +2,9 @@ import { FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { encontrosMock, type Encontro, type EncontroTipo } from "../data/mockEncontros";
+import { useEncontros } from "../data/encontrosStore";
+import { type Encontro, type EncontroTipo } from "../data/mockEncontros";
+import FloatingCreateButton from "../components/FloatingCreateButton";
 
 const imageByTipo: Record<EncontroTipo, string> = {
   esporte: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=900&q=80",
@@ -13,13 +15,8 @@ const imageByTipo: Record<EncontroTipo, string> = {
 };
 
 type MeuEncontro = Encontro & {
-  status: "Confirmado" | "Lista de espera";
+  status: "Criado por voce" | "Confirmado" | "Lista de espera";
 };
-
-const meusEncontros: MeuEncontro[] = encontrosMock.slice(0, 4).map((item, index) => ({
-  ...item,
-  status: index === 3 ? "Lista de espera" : "Confirmado",
-}));
 
 function CardMeuEncontro({ item }: { item: MeuEncontro }) {
   const vagasRestantes = item.capacidade - item.participantes;
@@ -42,8 +39,20 @@ function CardMeuEncontro({ item }: { item: MeuEncontro }) {
       <View style={styles.cardBody}>
         <View style={styles.cardTopRow}>
           <Text style={styles.cardTitle}>{item.titulo}</Text>
-          <View style={[styles.statusBadge, item.status === "Lista de espera" && styles.statusWait]}>
-            <Text style={[styles.statusText, item.status === "Lista de espera" && styles.statusWaitText]}>
+          <View
+            style={[
+              styles.statusBadge,
+              item.status === "Lista de espera" && styles.statusWait,
+              item.status === "Criado por voce" && styles.statusCreated,
+            ]}
+          >
+            <Text
+              style={[
+                styles.statusText,
+                item.status === "Lista de espera" && styles.statusWaitText,
+                item.status === "Criado por voce" && styles.statusCreatedText,
+              ]}
+            >
               {item.status}
             </Text>
           </View>
@@ -67,6 +76,17 @@ function CardMeuEncontro({ item }: { item: MeuEncontro }) {
 }
 
 export default function MeusEncontros() {
+  const encontros = useEncontros();
+  const meusEncontros: MeuEncontro[] = encontros.slice(0, 8).map((item, index) => {
+    if (item.anfitriao.toLowerCase() === "voce") {
+      return { ...item, status: "Criado por voce" };
+    }
+    return {
+      ...item,
+      status: index % 4 === 3 ? "Lista de espera" : "Confirmado",
+    };
+  });
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -80,7 +100,9 @@ export default function MeusEncontros() {
           <Text style={styles.summaryLabel}>Inscricoes</Text>
         </View>
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryValue}>{meusEncontros.filter((e) => e.status === "Confirmado").length}</Text>
+          <Text style={styles.summaryValue}>
+            {meusEncontros.filter((e) => e.status === "Confirmado" || e.status === "Criado por voce").length}
+          </Text>
           <Text style={styles.summaryLabel}>Confirmados</Text>
         </View>
         <View style={styles.summaryCard}>
@@ -96,6 +118,7 @@ export default function MeusEncontros() {
         renderItem={({ item }) => <CardMeuEncontro item={item} />}
         showsVerticalScrollIndicator={false}
       />
+      <FloatingCreateButton />
     </SafeAreaView>
   );
 }
@@ -183,6 +206,9 @@ const styles = StyleSheet.create({
   statusWait: {
     backgroundColor: "#FFF4E5",
   },
+  statusCreated: {
+    backgroundColor: "#EAF2FF",
+  },
   statusText: {
     fontSize: 11,
     fontWeight: "700",
@@ -190,6 +216,9 @@ const styles = StyleSheet.create({
   },
   statusWaitText: {
     color: "#B45309",
+  },
+  statusCreatedText: {
+    color: "#0B5ED7",
   },
   cardSubtitle: {
     marginTop: 4,
