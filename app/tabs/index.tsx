@@ -1,8 +1,12 @@
-import { FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { FlatList, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { encontrosMock, type Encontro, type EncontroTipo } from "../data/mockEncontros";
+import { encontrosMock, type Encontro, type EncontroPreco, type EncontroTipo } from "../data/mockEncontros";
+
+type TipoFiltro = "todos" | EncontroTipo;
+type PrecoFiltro = "todos" | EncontroPreco;
 
 const labelTipo: Record<EncontroTipo, string> = {
   esporte: "Esporte",
@@ -10,6 +14,24 @@ const labelTipo: Record<EncontroTipo, string> = {
   games: "Games",
   musica: "Musica",
   cafe: "Cafe",
+};
+
+const tipos: TipoFiltro[] = ["todos", "esporte", "networking", "games", "musica", "cafe"];
+const precos: PrecoFiltro[] = ["todos", "gratis", "pago"];
+
+const labelTipoFiltro: Record<TipoFiltro, string> = {
+  todos: "Todos",
+  esporte: "Esporte",
+  networking: "Networking",
+  games: "Games",
+  musica: "Musica",
+  cafe: "Cafe",
+};
+
+const labelPrecoFiltro: Record<PrecoFiltro, string> = {
+  todos: "Qualquer preco",
+  gratis: "Gratis",
+  pago: "Pago",
 };
 
 const imageByTipo: Record<EncontroTipo, string> = {
@@ -74,20 +96,115 @@ function CardEncontro({ item }: { item: Encontro }) {
 }
 
 export default function Home() {
+  const [modalFiltroAberto, setModalFiltroAberto] = useState(false);
+  const [tipoFiltro, setTipoFiltro] = useState<TipoFiltro>("todos");
+  const [precoFiltro, setPrecoFiltro] = useState<PrecoFiltro>("todos");
+  const [apenasComVaga, setApenasComVaga] = useState(false);
+
+  const encontrosFiltrados = useMemo(() => {
+    return encontrosMock.filter((encontro) => {
+      const okTipo = tipoFiltro === "todos" || encontro.tipo === tipoFiltro;
+      const okPreco = precoFiltro === "todos" || encontro.preco === precoFiltro;
+      const okVaga = !apenasComVaga || encontro.participantes < encontro.capacidade;
+      return okTipo && okPreco && okVaga;
+    });
+  }, [apenasComVaga, precoFiltro, tipoFiltro]);
+
+  const totalFiltrosAtivos =
+    (tipoFiltro !== "todos" ? 1 : 0) + (precoFiltro !== "todos" ? 1 : 0) + (apenasComVaga ? 1 : 0);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.heading}>Encontros em destaque</Text>
-        <Text style={styles.subheading}>Descubra grupos e atividades perto de voce</Text>
+        <View>
+          <Text style={styles.heading}>Encontros em destaque</Text>
+          <Text style={styles.subheading}>Descubra grupos e atividades perto de voce</Text>
+        </View>
+        <Pressable style={styles.filterButton} onPress={() => setModalFiltroAberto(true)}>
+          <Ionicons name="options-outline" size={16} color="#0F172A" />
+          <Text style={styles.filterButtonText}>Filtro</Text>
+          {totalFiltrosAtivos > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>{totalFiltrosAtivos}</Text>
+            </View>
+          )}
+        </Pressable>
       </View>
 
       <FlatList
-        data={encontrosMock}
+        data={encontrosFiltrados}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <CardEncontro item={item} />}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />
+
+      <Modal visible={modalFiltroAberto} transparent animationType="fade" onRequestClose={() => setModalFiltroAberto(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filtros</Text>
+              <Pressable onPress={() => setModalFiltroAberto(false)}>
+                <Ionicons name="close" size={22} color="#334155" />
+              </Pressable>
+            </View>
+
+            <Text style={styles.modalSectionTitle}>Tipo de encontro</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+              {tipos.map((tipo) => (
+                <Pressable
+                  key={tipo}
+                  onPress={() => setTipoFiltro(tipo)}
+                  style={[styles.chip, tipoFiltro === tipo && styles.chipActive]}
+                >
+                  <Text style={[styles.chipText, tipoFiltro === tipo && styles.chipTextActive]}>
+                    {labelTipoFiltro[tipo]}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+
+            <Text style={styles.modalSectionTitle}>Preco</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+              {precos.map((preco) => (
+                <Pressable
+                  key={preco}
+                  onPress={() => setPrecoFiltro(preco)}
+                  style={[styles.chip, precoFiltro === preco && styles.chipActive]}
+                >
+                  <Text style={[styles.chipText, precoFiltro === preco && styles.chipTextActive]}>
+                    {labelPrecoFiltro[preco]}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+
+            <Text style={styles.modalSectionTitle}>Vagas</Text>
+            <Pressable
+              onPress={() => setApenasComVaga((prev) => !prev)}
+              style={[styles.chip, apenasComVaga && styles.chipActive, styles.singleChip]}
+            >
+              <Text style={[styles.chipText, apenasComVaga && styles.chipTextActive]}>Somente encontros com vaga</Text>
+            </Pressable>
+
+            <View style={styles.modalActions}>
+              <Pressable
+                style={styles.clearButton}
+                onPress={() => {
+                  setTipoFiltro("todos");
+                  setPrecoFiltro("todos");
+                  setApenasComVaga(false);
+                }}
+              >
+                <Text style={styles.clearButtonText}>Limpar</Text>
+              </Pressable>
+              <Pressable style={styles.applyButton} onPress={() => setModalFiltroAberto(false)}>
+                <Text style={styles.applyButtonText}>Aplicar</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -101,6 +218,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 6,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 8,
   },
   heading: {
     fontSize: 24,
@@ -111,6 +232,36 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#64748B",
     marginTop: 2,
+  },
+  filterButton: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#D6DFEA",
+    backgroundColor: "#fff",
+    minHeight: 36,
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  filterButtonText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#0F172A",
+  },
+  filterBadge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "#0066FF",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
+  filterBadgeText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "700",
   },
   listContent: {
     paddingHorizontal: 16,
@@ -203,5 +354,92 @@ const styles = StyleSheet.create({
   },
   vagaTextUrgente: {
     color: "#B42318",
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(15,23,42,0.45)",
+    justifyContent: "center",
+    padding: 16,
+  },
+  modalCard: {
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 14,
+    gap: 8,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 2,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  modalSectionTitle: {
+    marginTop: 8,
+    marginBottom: 2,
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#334155",
+  },
+  chipsRow: {
+    gap: 8,
+    paddingRight: 8,
+  },
+  chip: {
+    borderWidth: 1,
+    borderColor: "#D6DFEA",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#fff",
+  },
+  chipActive: {
+    backgroundColor: "#0066FF",
+    borderColor: "#0066FF",
+  },
+  chipText: {
+    fontSize: 12,
+    color: "#334155",
+    fontWeight: "600",
+  },
+  chipTextActive: {
+    color: "#fff",
+  },
+  singleChip: {
+    alignSelf: "flex-start",
+  },
+  modalActions: {
+    marginTop: 14,
+    flexDirection: "row",
+    gap: 8,
+  },
+  clearButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#D6DFEA",
+    borderRadius: 10,
+    minHeight: 42,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  clearButtonText: {
+    color: "#0F172A",
+    fontWeight: "600",
+  },
+  applyButton: {
+    flex: 1.2,
+    backgroundColor: "#0066FF",
+    borderRadius: 10,
+    minHeight: 42,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  applyButtonText: {
+    color: "#fff",
+    fontWeight: "700",
   },
 });

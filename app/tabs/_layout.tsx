@@ -1,4 +1,3 @@
-// app/tabs/_layout.tsx
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -9,41 +8,52 @@ export default function Layout() {
         headerShown: false,
         tabBarActiveTintColor: "#0066FF",
         tabBarInactiveTintColor: "#64748B",
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600", marginTop: -1 },
+        tabBarItemStyle: { borderRadius: 12 },
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          height: 64,
+          position: "absolute",
+          left: 12,
+          right: 12,
+          bottom: 12,
+          height: 66,
+          borderTopWidth: 0,
+          borderRadius: 18,
           paddingBottom: 8,
           paddingTop: 8,
-          borderTopWidth: 1,
-          borderTopColor: "#E2E8F0",
           backgroundColor: "#FFFFFF",
+          elevation: 10,
+          shadowColor: "#0F172A",
+          shadowOpacity: 0.12,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 4 },
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Início",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+          title: "Inicio",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "home" : "home-outline"} size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="buscar"
         options={{
-          title: "Busca",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="search-outline" size={size} color={color} />
+          title: "Buscar",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "search" : "search-outline"} size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="locais"
         options={{
-          title: "Locais",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="business-outline" size={size} color={color} />
+          title: "Meus encontros",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "calendar" : "calendar-outline"} size={size} color={color} />
           ),
         }}
       />
@@ -51,17 +61,12 @@ export default function Layout() {
         name="mensagens"
         options={{
           title: "Mensagens",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubble-ellipses-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="menu"
-        options={{
-          title: "Menu",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="menu-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "chatbubble-ellipses" : "chatbubble-ellipses-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -69,9 +74,15 @@ export default function Layout() {
         name="perfil"
         options={{
           title: "Perfil",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-circle-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "person-circle" : "person-circle-outline"} size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="menu"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
