@@ -44,6 +44,8 @@ export default function CriarEncontro() {
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [bairro, setBairro] = useState("");
+  const [endereco, setEndereco] = useState("");
+  const [imagemUrl, setImagemUrl] = useState("");
   const [data, setData] = useState("2026-02-28");
   const [hora, setHora] = useState("19:00");
   const [capacidade, setCapacidade] = useState("12");
@@ -52,8 +54,8 @@ export default function CriarEncontro() {
 
   const salvarEncontro = () => {
     const capacidadeNumero = Number(capacidade);
-    if (!titulo.trim() || !descricao.trim() || !bairro.trim()) {
-      Alert.alert("Campos obrigatorios", "Preencha titulo, descricao e bairro.");
+    if (!titulo.trim() || !descricao.trim() || !bairro.trim() || !endereco.trim()) {
+      Alert.alert("Campos obrigatorios", "Preencha titulo, descricao, bairro e endereco.");
       return;
     }
     if (!Number.isFinite(capacidadeNumero) || capacidadeNumero < 2) {
@@ -71,6 +73,8 @@ export default function CriarEncontro() {
       hora: hora.trim(),
       anfitriao: "Voce",
       bairro: bairro.trim(),
+      endereco: endereco.trim(),
+      imagemUrl: imagemUrl.trim() || undefined,
       participantes: 1,
       capacidade: capacidadeNumero,
       latitude: coord.latitude,
@@ -110,6 +114,23 @@ export default function CriarEncontro() {
 
           <Text style={styles.label}>Bairro</Text>
           <TextInput value={bairro} onChangeText={setBairro} style={styles.input} placeholder="Ex: Pinheiros" />
+
+          <Text style={styles.label}>Endereco</Text>
+          <TextInput
+            value={endereco}
+            onChangeText={setEndereco}
+            style={styles.input}
+            placeholder="Ex: Rua dos Pinheiros, 220"
+          />
+
+          <Text style={styles.label}>Imagem do encontro (URL)</Text>
+          <TextInput
+            value={imagemUrl}
+            onChangeText={setImagemUrl}
+            style={styles.input}
+            placeholder="https://..."
+            autoCapitalize="none"
+          />
 
           <View style={styles.row}>
             <View style={styles.col}>

@@ -15,6 +15,8 @@ export type NovoEncontroInput = {
   hora: string;
   anfitriao: string;
   bairro: string;
+  endereco: string;
+  imagemUrl?: string;
   participantes: number;
   capacidade: number;
   latitude: number;

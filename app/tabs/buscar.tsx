@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import MapView, { Callout, Marker } from "react-native-maps";
@@ -43,6 +43,14 @@ const iconePorTipo: Record<EncontroTipo, keyof typeof Ionicons.glyphMap> = {
   games: "game-controller",
   musica: "musical-notes",
   cafe: "restaurant",
+};
+
+const imagemPorTipo: Record<EncontroTipo, string> = {
+  esporte: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1200&q=80",
+  networking: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80",
+  games: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80",
+  musica: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1200&q=80",
+  cafe: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80",
 };
 
 export default function Buscar() {
@@ -166,34 +174,46 @@ export default function Buscar() {
         </View>
       </SafeAreaView>
 
-      {selecionado && (
-        <View style={styles.bottomCard}>
-          <Text style={styles.bottomTitle}>{selecionado.titulo}</Text>
-          <Text style={styles.bottomText}>{`${labelsTipo[selecionado.tipo]} | ${selecionado.bairro}`}</Text>
-          <Text style={styles.bottomText}>{`${selecionado.participantes}/${selecionado.capacidade} participantes`}</Text>
-          <View style={styles.bottomActions}>
-            <Pressable style={styles.ghostButton} onPress={() => setSelecionado(null)}>
-              <Text style={styles.ghostButtonText}>Fechar</Text>
-            </Pressable>
-            <Pressable
-              style={styles.primaryButton}
-              onPress={() =>
-                router.push({
-                  pathname: "/detalhes",
-                  params: {
-                    id: selecionado.id,
-                    nome: selecionado.titulo,
-                    tipo: labelsTipo[selecionado.tipo],
-                    descricao: selecionado.descricao,
-                  },
-                })
-              }
-            >
-              <Text style={styles.primaryButtonText}>Ver detalhes</Text>
-            </Pressable>
+      <Modal
+        visible={!!selecionado}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelecionado(null)}
+      >
+        {selecionado && (
+          <View style={styles.previewBackdrop}>
+            <View style={styles.previewCard}>
+              <Image
+                source={{ uri: selecionado.imagemUrl || imagemPorTipo[selecionado.tipo] }}
+                style={styles.previewImage}
+              />
+              <View style={styles.previewBody}>
+                <Text style={styles.bottomTitle}>{selecionado.titulo}</Text>
+                <Text style={styles.bottomText}>{`${labelsTipo[selecionado.tipo]} | ${selecionado.bairro}`}</Text>
+                <Text style={styles.bottomText}>{`${selecionado.participantes}/${selecionado.capacidade} participantes`}</Text>
+                <Text style={styles.bottomText}>{`${selecionado.data} | ${selecionado.hora}`}</Text>
+                <View style={styles.bottomActions}>
+                  <Pressable style={styles.ghostButton} onPress={() => setSelecionado(null)}>
+                    <Text style={styles.ghostButtonText}>Fechar</Text>
+                  </Pressable>
+                  <Pressable
+                    style={styles.primaryButton}
+                    onPress={() => {
+                      setSelecionado(null);
+                      router.push({
+                        pathname: "/detalhes",
+                        params: { id: selecionado.id },
+                      });
+                    }}
+                  >
+                    <Text style={styles.primaryButtonText}>Ver detalhes</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </View>
           </View>
-        </View>
-      )}
+        )}
+      </Modal>
       <FloatingCreateButton />
     </View>
   );
@@ -297,19 +317,29 @@ const styles = StyleSheet.create({
   chipTextActive: {
     color: "#fff",
   },
-  bottomCard: {
-    position: "absolute",
-    left: 14,
-    right: 14,
-    bottom: 24,
+  previewBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(15,23,42,0.45)",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  previewCard: {
     backgroundColor: "#fff",
     borderRadius: 18,
-    padding: 14,
+    overflow: "hidden",
     elevation: 7,
     shadowColor: "#0F172A",
     shadowOpacity: 0.16,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
+  },
+  previewImage: {
+    width: "100%",
+    height: 190,
+    backgroundColor: "#E2E8F0",
+  },
+  previewBody: {
+    padding: 14,
   },
   bottomTitle: {
     fontSize: 17,
