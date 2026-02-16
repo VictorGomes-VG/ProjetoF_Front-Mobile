@@ -6,6 +6,7 @@ export default function Detalhes() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.id}>{`ID do encontro: ${id}`}</Text>
       <Text style={styles.titulo}>{nome}</Text>
       <Text style={styles.tipo}>{tipo}</Text>
       <Text style={styles.descricao}>{descricao}</Text>
@@ -18,6 +19,11 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     backgroundColor: "#fff",
+  },
+  id: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 8,
   },
   titulo: {
     fontSize: 28,
