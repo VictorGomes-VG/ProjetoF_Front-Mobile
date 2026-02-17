@@ -13,6 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useEncontros } from "../data/encontrosStore";
 import AvaliacaoInfo from "../components/AvaliacaoInfo";
+import FloatingMenuButton from "../components/FloatingMenuButton";
 
 export default function Perfil() {
   const encontros = useEncontros();
@@ -91,6 +92,7 @@ export default function Perfil() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <FloatingMenuButton />
       <View style={styles.heroCard}>
         <Image source={{ uri: capaUrl }} style={styles.cover} />
         <Pressable style={styles.editPencil} onPress={() => setModoEdicao((prev) => !prev)}>

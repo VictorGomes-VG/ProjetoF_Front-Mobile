@@ -293,7 +293,6 @@ export default function Buscar() {
           </View>
         </View>
       </SafeAreaView>
-
       <Modal visible={!!selecionado} transparent animationType="fade" onRequestClose={() => setSelecionado(null)}>
         {selecionado && (
           <View style={styles.previewBackdrop}>

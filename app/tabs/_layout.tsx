@@ -82,7 +82,10 @@ export default function Layout() {
       <Tabs.Screen
         name="menu"
         options={{
-          href: null,
+          title: "Menu",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "menu" : "menu-outline"} size={size} color={color} />
+          ),
         }}
       />
     </Tabs>
