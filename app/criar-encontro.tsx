@@ -18,6 +18,18 @@ import { type EncontroPreco, type EncontroTipo } from "./data/mockEncontros";
 
 const tipos: EncontroTipo[] = ["esporte", "networking", "games", "musica", "cafe"];
 const precos: EncontroPreco[] = ["gratis", "pago"];
+const comunidadeTagsDisponiveis = [
+  "LGBTQIA+",
+  "Nerd",
+  "Geek",
+  "Tech",
+  "Empreendedorismo",
+  "Mães e pais",
+  "Universitarios",
+  "Bem-estar",
+  "Novos na cidade",
+  "Artistas",
+];
 
 const labelsTipo: Record<EncontroTipo, string> = {
   esporte: "Esporte",
@@ -43,6 +55,7 @@ function randomCoordinate() {
 export default function CriarEncontro() {
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
+  const [cidade, setCidade] = useState("Sao Paulo");
   const [bairro, setBairro] = useState("");
   const [endereco, setEndereco] = useState("");
   const [imagemUrl, setImagemUrl] = useState("");
@@ -50,12 +63,13 @@ export default function CriarEncontro() {
   const [hora, setHora] = useState("19:00");
   const [capacidade, setCapacidade] = useState("12");
   const [tipo, setTipo] = useState<EncontroTipo>("networking");
+  const [comunidadeTags, setComunidadeTags] = useState<string[]>(["Tech"]);
   const [preco, setPreco] = useState<EncontroPreco>("gratis");
 
   const salvarEncontro = () => {
     const capacidadeNumero = Number(capacidade);
-    if (!titulo.trim() || !descricao.trim() || !bairro.trim() || !endereco.trim()) {
-      Alert.alert("Campos obrigatorios", "Preencha titulo, descricao, bairro e endereco.");
+    if (!titulo.trim() || !descricao.trim() || !cidade.trim() || !bairro.trim() || !endereco.trim()) {
+      Alert.alert("Campos obrigatorios", "Preencha titulo, descricao, cidade, bairro e endereco.");
       return;
     }
     if (!Number.isFinite(capacidadeNumero) || capacidadeNumero < 2) {
@@ -68,10 +82,12 @@ export default function CriarEncontro() {
       titulo: titulo.trim(),
       descricao: descricao.trim(),
       tipo,
+      comunidadeTags,
       preco,
       data: data.trim(),
       hora: hora.trim(),
       anfitriao: "Voce",
+      cidade: cidade.trim(),
       bairro: bairro.trim(),
       endereco: endereco.trim(),
       imagemUrl: imagemUrl.trim() || undefined,
@@ -111,6 +127,9 @@ export default function CriarEncontro() {
             placeholder="Conte como sera o encontro"
             multiline
           />
+
+          <Text style={styles.label}>Cidade</Text>
+          <TextInput value={cidade} onChangeText={setCidade} style={styles.input} placeholder="Ex: Sao Paulo" />
 
           <Text style={styles.label}>Bairro</Text>
           <TextInput value={bairro} onChangeText={setBairro} style={styles.input} placeholder="Ex: Pinheiros" />
@@ -159,6 +178,26 @@ export default function CriarEncontro() {
                 <Text style={[styles.chipText, tipo === item && styles.chipTextActive]}>{labelsTipo[item]}</Text>
               </Pressable>
             ))}
+          </View>
+
+          <Text style={styles.label}>Comunidades</Text>
+          <View style={styles.chipsRow}>
+            {comunidadeTagsDisponiveis.map((tag) => {
+              const selected = comunidadeTags.includes(tag);
+              return (
+                <Pressable
+                  key={tag}
+                  onPress={() =>
+                    setComunidadeTags((prev) =>
+                      prev.includes(tag) ? prev.filter((item) => item !== tag) : [...prev, tag]
+                    )
+                  }
+                  style={[styles.chip, selected && styles.chipActive]}
+                >
+                  <Text style={[styles.chipText, selected && styles.chipTextActive]}>{tag}</Text>
+                </Pressable>
+              );
+            })}
           </View>
 
           <Text style={styles.label}>Preco</Text>

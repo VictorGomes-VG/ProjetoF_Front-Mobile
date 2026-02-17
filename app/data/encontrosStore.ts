@@ -10,10 +10,12 @@ export type NovoEncontroInput = {
   titulo: string;
   descricao: string;
   tipo: EncontroTipo;
+  comunidadeTags: string[];
   preco: EncontroPreco;
   data: string;
   hora: string;
   anfitriao: string;
+  cidade: string;
   bairro: string;
   endereco: string;
   imagemUrl?: string;

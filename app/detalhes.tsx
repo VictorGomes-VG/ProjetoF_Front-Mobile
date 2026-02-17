@@ -103,6 +103,13 @@ export default function Detalhes() {
 
           <Text style={styles.sectionTitle}>Sobre o encontro</Text>
           <Text style={styles.description}>{encontro.descricao}</Text>
+          <View style={styles.tagsRow}>
+            {encontro.comunidadeTags.map((tag) => (
+              <View key={tag} style={styles.tagChip}>
+                <Text style={styles.tagText}>{tag}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -231,6 +238,25 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     color: "#334155",
+  },
+  tagsRow: {
+    marginTop: 10,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  tagChip: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: "#FFF1F3",
+    borderWidth: 1,
+    borderColor: "#FFC8D0",
+  },
+  tagText: {
+    fontSize: 12,
+    color: "#B42343",
+    fontWeight: "600",
   },
   emptyContainer: {
     flex: 1,
