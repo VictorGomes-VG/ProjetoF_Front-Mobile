@@ -24,6 +24,7 @@ import { useAuthSession } from "./data/authStore";
 import { addEncontro } from "./data/encontrosStore";
 import { useUserLocation } from "./hooks/useUserLocation";
 import { type EncontroPreco, type EncontroTipo } from "./data/mockEncontros";
+import { friendsZoneTheme } from "./theme";
 
 const tipos: EncontroTipo[] = ["esporte", "networking", "games", "musica", "cafe"];
 const precos: EncontroPreco[] = ["gratis", "pago"];
@@ -315,7 +316,7 @@ export default function CriarEncontro() {
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.flex}>
         <View style={styles.header}>
           <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={18} color="#0F172A" />
+            <Ionicons name="arrow-back" size={18} color={colors.text} />
           </Pressable>
           <View style={styles.headerText}>
             <Text style={styles.title}>Criar encontro</Text>
@@ -328,7 +329,7 @@ export default function CriarEncontro() {
             <Image source={{ uri: coverPreview }} style={styles.coverPreview} />
             <View style={styles.coverOverlay} />
             <Pressable style={styles.coverEditButton} onPress={() => void pickImageFromGallery()}>
-              <Ionicons name="pencil" size={16} color="#0F172A" />
+              <Ionicons name="pencil" size={16} color={colors.text} />
             </Pressable>
             <View style={styles.coverContent}>
               <View style={styles.coverBadge}>
@@ -378,13 +379,13 @@ export default function CriarEncontro() {
             />
             <View style={styles.mapActionsRow}>
               <Pressable style={styles.mapButton} onPress={openMapPicker}>
-                <Ionicons name="map-outline" size={16} color="#0B5ED7" />
+                <Ionicons name="map-outline" size={16} color={colors.secondary} />
                 <Text style={styles.mapButtonText}>Escolher no mapa</Text>
               </Pressable>
             </View>
             {resolvendoEndereco ? (
               <View style={styles.addressStatusRow}>
-                <ActivityIndicator size="small" color="#0B5ED7" />
+                <ActivityIndicator size="small" color={colors.secondary} />
                 <Text style={styles.addressStatusText}>Atualizando endereco a partir do pin...</Text>
               </View>
             ) : null}
@@ -393,14 +394,14 @@ export default function CriarEncontro() {
               <View style={styles.col}>
                 <Text style={styles.label}>Data</Text>
                 <Pressable style={styles.inputButton} onPress={() => openPicker("date")}>
-                  <Ionicons name="calendar-outline" size={16} color="#64748B" />
+                  <Ionicons name="calendar-outline" size={16} color={colors.textSoft} />
                   <Text style={styles.inputButtonText}>{data}</Text>
                 </Pressable>
               </View>
               <View style={styles.col}>
                 <Text style={styles.label}>Hora</Text>
                 <Pressable style={styles.inputButton} onPress={() => openPicker("time")}>
-                  <Ionicons name="time-outline" size={16} color="#64748B" />
+                  <Ionicons name="time-outline" size={16} color={colors.textSoft} />
                   <Text style={styles.inputButtonText}>{hora}</Text>
                 </Pressable>
               </View>
@@ -444,7 +445,7 @@ export default function CriarEncontro() {
               ))}
             </View>
             <View style={styles.capacityInfoCard}>
-              <Ionicons name="people-outline" size={16} color="#0B5ED7" />
+              <Ionicons name="people-outline" size={16} color={colors.secondary} />
               <Text style={styles.capacityInfoText}>
                 Seu plano atual permite ate {maxEventCapacity} pessoas no total, contando com o anfitriao.
               </Text>
@@ -520,7 +521,7 @@ export default function CriarEncontro() {
         <SafeAreaView style={styles.mapModalContainer}>
           <View style={styles.mapModalHeader}>
             <Pressable style={styles.backButton} onPress={() => setMapaAberto(false)}>
-              <Ionicons name="arrow-back" size={18} color="#0F172A" />
+              <Ionicons name="arrow-back" size={18} color={colors.text} />
             </Pressable>
             <View style={styles.mapModalHeaderText}>
               <Text style={styles.title}>Escolher local do encontro</Text>
@@ -550,7 +551,7 @@ export default function CriarEncontro() {
             <Text style={styles.mapSheetTitle}>Pin selecionado</Text>
             {resolvendoPin ? (
               <View style={styles.mapAddressLoadingRow}>
-                <ActivityIndicator size="small" color="#0B5ED7" />
+                <ActivityIndicator size="small" color={colors.secondary} />
                 <Text style={styles.mapAddressLoadingText}>Buscando endereco do pin...</Text>
               </View>
             ) : (
@@ -585,10 +586,12 @@ function formatTimeValue(value: Date) {
   return `${hours}:${minutes}`;
 }
 
+const { colors, shadows } = friendsZoneTheme;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F4F7FB",
+    backgroundColor: colors.background,
   },
   flex: {
     flex: 1,
@@ -608,18 +611,21 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
+    ...shadows.card,
   },
   title: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#0F172A",
+    color: colors.text,
   },
   subtitle: {
     marginTop: 2,
-    color: "#64748B",
+    color: colors.textMuted,
     fontSize: 13,
   },
   content: {
@@ -629,9 +635,10 @@ const styles = StyleSheet.create({
   },
   coverCard: {
     height: 214,
-    borderRadius: 22,
+    borderRadius: 24,
     overflow: "hidden",
-    backgroundColor: "#D6DFEA",
+    backgroundColor: colors.surfaceMuted,
+    ...shadows.card,
   },
   coverPreview: {
     width: "100%",
@@ -639,7 +646,7 @@ const styles = StyleSheet.create({
   },
   coverOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(15,23,42,0.32)",
+    backgroundColor: colors.overlay,
   },
   coverContent: {
     position: "absolute",
@@ -655,27 +662,29 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.92)",
+    backgroundColor: "rgba(255,255,255,0.94)",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 2,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.6)",
   },
   coverBadge: {
     alignSelf: "flex-start",
     borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "rgba(255,255,255,0.2)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.28)",
+    borderColor: "rgba(255,255,255,0.36)",
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
   coverBadgeText: {
-    color: "#FFFFFF",
+    color: colors.white,
     fontSize: 12,
     fontWeight: "700",
   },
   coverTitle: {
-    color: "#FFFFFF",
+    color: colors.white,
     fontSize: 26,
     lineHeight: 31,
     fontWeight: "800",
@@ -686,23 +695,21 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   sectionCard: {
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    padding: 14,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
     gap: 8,
-    shadowColor: "#0F172A",
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    ...shadows.card,
   },
   sectionTitle: {
-    color: "#0F172A",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "700",
   },
   sectionDescription: {
-    color: "#64748B",
+    color: colors.textMuted,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -710,30 +717,30 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 12,
     fontWeight: "600",
-    color: "#334155",
+    color: colors.textSoft,
   },
   input: {
-    minHeight: 44,
-    borderRadius: 12,
+    minHeight: 46,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#D6DFEA",
-    backgroundColor: "#fff",
+    borderColor: colors.border,
+    backgroundColor: colors.backgroundSoft,
     paddingHorizontal: 12,
-    color: "#0F172A",
+    color: colors.text,
   },
   inputButton: {
-    minHeight: 44,
-    borderRadius: 12,
+    minHeight: 46,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#D6DFEA",
-    backgroundColor: "#fff",
+    borderColor: colors.border,
+    backgroundColor: colors.backgroundSoft,
     paddingHorizontal: 12,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
   inputButtonText: {
-    color: "#0F172A",
+    color: colors.text,
     fontWeight: "600",
   },
   mapActionsRow: {
@@ -748,11 +755,13 @@ const styles = StyleSheet.create({
     gap: 6,
     minHeight: 42,
     paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: "#EAF2FF",
+    borderRadius: 14,
+    backgroundColor: colors.secondarySoft,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   mapButtonText: {
-    color: "#0B5ED7",
+    color: colors.secondary,
     fontWeight: "700",
     fontSize: 13,
   },
@@ -763,7 +772,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   addressStatusText: {
-    color: "#475569",
+    color: colors.textMuted,
     fontSize: 12,
   },
   multiline: {
@@ -790,16 +799,16 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   planCard: {
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#D6DFEA",
-    backgroundColor: "#F8FAFC",
-    padding: 12,
+    borderColor: colors.border,
+    backgroundColor: colors.backgroundSoft,
+    padding: 14,
     gap: 6,
   },
   planCardActive: {
-    borderColor: "#BFDBFE",
-    backgroundColor: "#EFF6FF",
+    borderColor: colors.secondary,
+    backgroundColor: colors.secondarySoft,
   },
   planHeader: {
     flexDirection: "row",
@@ -808,12 +817,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   planName: {
-    color: "#0F172A",
+    color: colors.text,
     fontSize: 14,
     fontWeight: "700",
   },
   planNameActive: {
-    color: "#0B5ED7",
+    color: colors.secondary,
   },
   planBadge: {
     borderRadius: 999,
@@ -821,31 +830,31 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   planBadgeActive: {
-    backgroundColor: "#DBEAFE",
+    backgroundColor: colors.surface,
   },
   planBadgeLocked: {
-    backgroundColor: "#E2E8F0",
+    backgroundColor: colors.surfaceMuted,
   },
   planBadgeText: {
     fontSize: 11,
     fontWeight: "700",
   },
   planBadgeTextActive: {
-    color: "#0B5ED7",
+    color: colors.secondary,
   },
   planBadgeTextLocked: {
-    color: "#64748B",
+    color: colors.textMuted,
   },
   planCapacity: {
-    color: "#0F172A",
+    color: colors.text,
     fontSize: 20,
     fontWeight: "800",
   },
   planCapacityActive: {
-    color: "#0B5ED7",
+    color: colors.secondary,
   },
   planDescription: {
-    color: "#64748B",
+    color: colors.textMuted,
     fontSize: 12,
     lineHeight: 18,
   },
@@ -853,42 +862,42 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     alignItems: "flex-start",
-    borderRadius: 12,
-    backgroundColor: "#F8FAFC",
+    borderRadius: 14,
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
-    borderColor: "#D6DFEA",
+    borderColor: colors.border,
     padding: 12,
   },
   capacityInfoText: {
     flex: 1,
-    color: "#334155",
+    color: colors.textMuted,
     fontSize: 12,
     lineHeight: 18,
   },
   chip: {
     borderWidth: 1,
-    borderColor: "#D6DFEA",
+    borderColor: colors.border,
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
   },
   chipActive: {
-    backgroundColor: "#0066FF",
-    borderColor: "#0066FF",
+    backgroundColor: colors.secondary,
+    borderColor: colors.secondary,
   },
   chipText: {
     fontSize: 12,
-    color: "#334155",
+    color: colors.textMuted,
     fontWeight: "600",
   },
   chipTextActive: {
-    color: "#fff",
+    color: colors.white,
   },
   saveButton: {
-    minHeight: 48,
-    borderRadius: 12,
-    backgroundColor: "#0066FF",
+    minHeight: 50,
+    borderRadius: 14,
+    backgroundColor: colors.secondary,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -896,21 +905,22 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   saveButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 15,
     fontWeight: "700",
   },
   submitCard: {
-    borderRadius: 18,
-    backgroundColor: "#0F172A",
-    padding: 14,
+    borderRadius: 22,
+    backgroundColor: colors.text,
+    padding: 16,
     gap: 12,
+    ...shadows.card,
   },
   submitSummary: {
     gap: 4,
   },
   submitSummaryTitle: {
-    color: "#FFFFFF",
+    color: colors.white,
     fontSize: 17,
     fontWeight: "700",
   },
@@ -921,7 +931,7 @@ const styles = StyleSheet.create({
   },
   mapModalContainer: {
     flex: 1,
-    backgroundColor: "#F4F7FB",
+    backgroundColor: colors.background,
   },
   mapModalHeader: {
     flexDirection: "row",
@@ -936,31 +946,28 @@ const styles = StyleSheet.create({
   },
   mapModalSubtitle: {
     marginTop: 2,
-    color: "#64748B",
+    color: colors.textMuted,
     fontSize: 12,
   },
   map: {
     flex: 1,
   },
   mapSheet: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     padding: 16,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     gap: 8,
+    borderTopWidth: 1,
+    borderColor: colors.border,
   },
   mapSheetTitle: {
-    color: "#0F172A",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "700",
   },
-  mapSheetCoords: {
-    color: "#0B5ED7",
-    fontSize: 13,
-    fontWeight: "700",
-  },
   mapSheetAddress: {
-    color: "#0F172A",
+    color: colors.text,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "600",
@@ -971,11 +978,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   mapAddressLoadingText: {
-    color: "#475569",
+    color: colors.textMuted,
     fontSize: 13,
   },
   mapSheetHint: {
-    color: "#64748B",
+    color: colors.textMuted,
     lineHeight: 18,
     fontSize: 12,
   },
@@ -987,28 +994,28 @@ const styles = StyleSheet.create({
   secondaryActionButton: {
     flex: 1,
     minHeight: 46,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#CBD5E1",
+    borderColor: colors.borderStrong,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
+    backgroundColor: colors.surfaceAlt,
   },
   secondaryActionButtonText: {
-    color: "#0F172A",
+    color: colors.text,
     fontWeight: "700",
     fontSize: 13,
   },
   primaryActionButton: {
     flex: 1.2,
     minHeight: 46,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#0066FF",
+    backgroundColor: colors.secondary,
   },
   primaryActionButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontWeight: "700",
     fontSize: 13,
   },
