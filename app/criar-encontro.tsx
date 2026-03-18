@@ -1,7 +1,9 @@
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -13,8 +15,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import * as Location from "expo-location";
+import MapView, { Marker, type MapPressEvent } from "react-native-maps";
 import { useAuthSession } from "./data/authStore";
 import { addEncontro } from "./data/encontrosStore";
+import { useUserLocation } from "./hooks/useUserLocation";
 import { type EncontroPreco, type EncontroTipo } from "./data/mockEncontros";
 
 const tipos: EncontroTipo[] = ["esporte", "networking", "games", "musica", "cafe"];
@@ -53,9 +58,17 @@ function randomCoordinate() {
   return { latitude: baseLat + latOffset, longitude: baseLng + lngOffset };
 }
 
+const DEFAULT_COORDINATE = {
+  latitude: -23.5606,
+  longitude: -46.6614,
+};
+
 export default function CriarEncontro() {
   const session = useAuthSession();
+  const { location: userLocation, refreshLocation } = useUserLocation();
   const [salvando, setSalvando] = useState(false);
+  const [mapaAberto, setMapaAberto] = useState(false);
+  const [resolvendoEndereco, setResolvendoEndereco] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [cidade, setCidade] = useState("Sao Paulo");
@@ -68,6 +81,59 @@ export default function CriarEncontro() {
   const [tipo, setTipo] = useState<EncontroTipo>("networking");
   const [comunidadeTags, setComunidadeTags] = useState<string[]>(["Tech"]);
   const [preco, setPreco] = useState<EncontroPreco>("gratis");
+  const [selectedCoordinate, setSelectedCoordinate] = useState(DEFAULT_COORDINATE);
+  const [draftCoordinate, setDraftCoordinate] = useState(DEFAULT_COORDINATE);
+
+  async function applyCoordinateDetails(latitude: number, longitude: number) {
+    setResolvendoEndereco(true);
+
+    try {
+      const [result] = await Location.reverseGeocodeAsync({ latitude, longitude });
+      if (result) {
+        const streetParts = [result.street, result.streetNumber].filter(Boolean);
+        const formattedAddress = streetParts.join(", ");
+
+        if (formattedAddress) {
+          setEndereco(formattedAddress);
+        }
+        if (result.city || result.subregion) {
+          setCidade(result.city || result.subregion || cidade);
+        }
+        if (result.district || result.subregion) {
+          setBairro(result.district || result.subregion || bairro);
+        }
+      }
+    } catch {
+      Alert.alert(
+        "Pin salvo",
+        "Nao foi possivel traduzir o pin para endereco automaticamente. Voce ainda pode ajustar os campos manualmente."
+      );
+    } finally {
+      setResolvendoEndereco(false);
+    }
+  }
+
+  function openMapPicker() {
+    const baseCoordinate = selectedCoordinate ?? userLocation ?? DEFAULT_COORDINATE;
+    setDraftCoordinate(baseCoordinate);
+    setMapaAberto(true);
+  }
+
+  async function pickCurrentLocation() {
+    await refreshLocation();
+    const current = userLocation ?? selectedCoordinate ?? DEFAULT_COORDINATE;
+    setDraftCoordinate(current);
+  }
+
+  async function confirmMapSelection() {
+    setSelectedCoordinate(draftCoordinate);
+    setMapaAberto(false);
+    await applyCoordinateDetails(draftCoordinate.latitude, draftCoordinate.longitude);
+  }
+
+  function handleMapPress(event: MapPressEvent) {
+    setDraftCoordinate(event.nativeEvent.coordinate);
+  }
 
   const salvarEncontro = async () => {
     const capacidadeNumero = Number(capacidade);
@@ -80,7 +146,7 @@ export default function CriarEncontro() {
       return;
     }
 
-    const coord = randomCoordinate();
+    const coord = selectedCoordinate ?? userLocation ?? randomCoordinate();
     try {
       setSalvando(true);
       await addEncontro({
@@ -151,6 +217,23 @@ export default function CriarEncontro() {
             style={styles.input}
             placeholder="Ex: Rua dos Pinheiros, 220"
           />
+          <View style={styles.mapActionsRow}>
+            <Pressable style={styles.mapButton} onPress={openMapPicker}>
+              <Ionicons name="map-outline" size={16} color="#0B5ED7" />
+              <Text style={styles.mapButtonText}>Escolher no mapa</Text>
+            </Pressable>
+            <View style={styles.coordinateBadge}>
+              <Text style={styles.coordinateBadgeText}>
+                {`${selectedCoordinate.latitude.toFixed(4)}, ${selectedCoordinate.longitude.toFixed(4)}`}
+              </Text>
+            </View>
+          </View>
+          {resolvendoEndereco ? (
+            <View style={styles.addressStatusRow}>
+              <ActivityIndicator size="small" color="#0B5ED7" />
+              <Text style={styles.addressStatusText}>Atualizando endereco a partir do pin...</Text>
+            </View>
+          ) : null}
 
           <Text style={styles.label}>Imagem do encontro (URL)</Text>
           <TextInput
@@ -228,6 +311,56 @@ export default function CriarEncontro() {
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <Modal visible={mapaAberto} animationType="slide" onRequestClose={() => setMapaAberto(false)}>
+        <SafeAreaView style={styles.mapModalContainer}>
+          <View style={styles.mapModalHeader}>
+            <Pressable style={styles.backButton} onPress={() => setMapaAberto(false)}>
+              <Ionicons name="arrow-back" size={18} color="#0F172A" />
+            </Pressable>
+            <View style={styles.mapModalHeaderText}>
+              <Text style={styles.title}>Escolher local do encontro</Text>
+              <Text style={styles.mapModalSubtitle}>Toque no mapa para posicionar o pin com precisao.</Text>
+            </View>
+          </View>
+
+          <MapView
+            style={styles.map}
+            initialRegion={{
+              latitude: draftCoordinate.latitude,
+              longitude: draftCoordinate.longitude,
+              latitudeDelta: 0.02,
+              longitudeDelta: 0.02,
+            }}
+            onPress={handleMapPress}
+            onLongPress={handleMapPress}
+          >
+            <Marker
+              coordinate={draftCoordinate}
+              draggable
+              onDragEnd={(event) => setDraftCoordinate(event.nativeEvent.coordinate)}
+            />
+          </MapView>
+
+          <View style={styles.mapSheet}>
+            <Text style={styles.mapSheetTitle}>Pin selecionado</Text>
+            <Text style={styles.mapSheetCoords}>
+              {`${draftCoordinate.latitude.toFixed(6)}, ${draftCoordinate.longitude.toFixed(6)}`}
+            </Text>
+            <Text style={styles.mapSheetHint}>
+              Depois de confirmar, vamos tentar preencher endereco, bairro e cidade automaticamente.
+            </Text>
+            <View style={styles.mapSheetActions}>
+              <Pressable style={styles.secondaryActionButton} onPress={() => void pickCurrentLocation()}>
+                <Text style={styles.secondaryActionButtonText}>Usar minha localizacao</Text>
+              </Pressable>
+              <Pressable style={styles.primaryActionButton} onPress={() => void confirmMapSelection()}>
+                <Text style={styles.primaryActionButtonText}>Confirmar pin</Text>
+              </Pressable>
+            </View>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -280,6 +413,52 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingHorizontal: 12,
     color: "#0F172A",
+  },
+  mapActionsRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+  },
+  mapButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    minHeight: 42,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: "#EAF2FF",
+  },
+  mapButtonText: {
+    color: "#0B5ED7",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  coordinateBadge: {
+    flex: 1,
+    minHeight: 42,
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#D6DFEA",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
+  coordinateBadgeText: {
+    color: "#475569",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  addressStatusRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  addressStatusText: {
+    color: "#475569",
+    fontSize: 12,
   },
   multiline: {
     minHeight: 94,
@@ -334,5 +513,83 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 15,
     fontWeight: "700",
+  },
+  mapModalContainer: {
+    flex: 1,
+    backgroundColor: "#F4F7FB",
+  },
+  mapModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 10,
+  },
+  mapModalHeaderText: {
+    flex: 1,
+  },
+  mapModalSubtitle: {
+    marginTop: 2,
+    color: "#64748B",
+    fontSize: 12,
+  },
+  map: {
+    flex: 1,
+  },
+  mapSheet: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    gap: 8,
+  },
+  mapSheetTitle: {
+    color: "#0F172A",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  mapSheetCoords: {
+    color: "#0B5ED7",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  mapSheetHint: {
+    color: "#64748B",
+    lineHeight: 18,
+    fontSize: 12,
+  },
+  mapSheetActions: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 4,
+  },
+  secondaryActionButton: {
+    flex: 1,
+    minHeight: 46,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+  },
+  secondaryActionButtonText: {
+    color: "#0F172A",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  primaryActionButton: {
+    flex: 1.2,
+    minHeight: 46,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#0066FF",
+  },
+  primaryActionButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 13,
   },
 });
