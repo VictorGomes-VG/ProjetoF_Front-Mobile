@@ -1,8 +1,9 @@
-import { useEffect } from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { loadEncontroById, useEncontros, useEncontrosStatus } from "./data/encontrosStore";
+import { useAuthSession } from "./data/authStore";
+import { joinEncontro, leaveEncontro, loadEncontroById, useEncontros, useEncontrosStatus } from "./data/encontrosStore";
 import { type EncontroTipo } from "./data/mockEncontros";
 import AvaliacaoInfo, { getMedalhaAvaliacao } from "./components/AvaliacaoInfo";
 
@@ -23,9 +24,11 @@ const fallbackImageByTipo: Record<EncontroTipo, string> = {
 };
 
 export default function Detalhes() {
+  const session = useAuthSession();
   const encontros = useEncontros();
   const { isLoading, isInitialized } = useEncontrosStatus();
   const params = useLocalSearchParams<{ id?: string; nome?: string; tipo?: string; descricao?: string }>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const encontro = encontros.find((item) => item.id === params.id);
 
@@ -59,6 +62,34 @@ export default function Detalhes() {
   const vagasRestantes = encontro.capacidade - encontro.participantes;
   const imageSource = encontro.imagemUrl || fallbackImageByTipo[encontro.tipo];
   const medalha = getMedalhaAvaliacao(encontro.nota, encontro.totalAvaliacoes);
+
+  async function handleJoinToggle() {
+    if (!params.id) {
+      return;
+    }
+
+    if (!session.user) {
+      Alert.alert("Sessao expirada", "Entre novamente para participar do encontro.");
+      router.replace("/login");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      if (encontro.isJoined) {
+        await leaveEncontro(params.id);
+      } else {
+        await joinEncontro(params.id);
+      }
+    } catch (error) {
+      Alert.alert(
+        "Nao foi possivel atualizar sua participacao",
+        error instanceof Error ? error.message : "Tente novamente."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -126,6 +157,39 @@ export default function Detalhes() {
                 <Text style={styles.tagText}>{tag}</Text>
               </View>
             ))}
+          </View>
+
+          <View style={styles.ctaCard}>
+            {encontro.isOwner ? (
+              <View style={[styles.ctaButton, styles.ownerButton]}>
+                <Text style={styles.ownerButtonText}>Voce esta organizando este encontro</Text>
+              </View>
+            ) : (
+              <Pressable
+                style={[
+                  styles.ctaButton,
+                  encontro.isJoined ? styles.leaveButton : styles.joinButton,
+                  (vagasRestantes <= 0 || isSubmitting) && !encontro.isJoined && styles.ctaDisabled,
+                ]}
+                disabled={(vagasRestantes <= 0 && !encontro.isJoined) || isSubmitting}
+                onPress={() => void handleJoinToggle()}
+              >
+                <Text style={[styles.ctaButtonText, encontro.isJoined && styles.leaveButtonText]}>
+                  {isSubmitting
+                    ? "Atualizando..."
+                    : encontro.isJoined
+                      ? "Cancelar participacao"
+                      : vagasRestantes <= 0
+                        ? "Encontro lotado"
+                        : "Participar do encontro"}
+                </Text>
+              </Pressable>
+            )}
+            <Text style={styles.ctaHint}>
+              {encontro.isJoined
+                ? "Sua vaga esta confirmada. Se sair agora, outra pessoa podera ocupar esse lugar."
+                : "Entre para aparecer em Meus encontros e acompanhar a organizacao com o host."}
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -274,6 +338,52 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#B42343",
     fontWeight: "600",
+  },
+  ctaCard: {
+    marginTop: 18,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 14,
+    gap: 10,
+  },
+  ctaButton: {
+    minHeight: 48,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  joinButton: {
+    backgroundColor: "#0B5ED7",
+  },
+  leaveButton: {
+    backgroundColor: "#FFF1F2",
+    borderWidth: 1,
+    borderColor: "#FECDD3",
+  },
+  ownerButton: {
+    backgroundColor: "#EAF2FF",
+  },
+  ctaDisabled: {
+    opacity: 0.6,
+  },
+  ctaButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 15,
+  },
+  leaveButtonText: {
+    color: "#B42318",
+  },
+  ownerButtonText: {
+    color: "#0B5ED7",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  ctaHint: {
+    color: "#64748B",
+    lineHeight: 19,
+    fontSize: 13,
   },
   emptyContainer: {
     flex: 1,

@@ -22,6 +22,9 @@ export type Encontro = {
   capacidade: number;
   latitude: number;
   longitude: number;
+  hostUserId?: string;
+  isOwner?: boolean;
+  isJoined?: boolean;
 };
 
 export type NovoEncontroInput = {

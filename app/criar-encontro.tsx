@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuthSession } from "./data/authStore";
 import { addEncontro } from "./data/encontrosStore";
 import { type EncontroPreco, type EncontroTipo } from "./data/mockEncontros";
 
@@ -53,6 +54,7 @@ function randomCoordinate() {
 }
 
 export default function CriarEncontro() {
+  const session = useAuthSession();
   const [salvando, setSalvando] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -89,7 +91,7 @@ export default function CriarEncontro() {
         preco,
         data: data.trim(),
         hora: hora.trim(),
-        anfitriao: "Voce",
+        anfitriao: session.user?.fullName ?? "Voce",
         cidade: cidade.trim(),
         bairro: bairro.trim(),
         endereco: endereco.trim(),

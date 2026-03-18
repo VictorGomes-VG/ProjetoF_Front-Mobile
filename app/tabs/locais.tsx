@@ -1,8 +1,10 @@
-import { FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useState } from "react";
+import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { useEncontros } from "../data/encontrosStore";
+import { fetchMyEvents } from "../services/friendZoneApi";
 import { type Encontro, type EncontroTipo } from "../data/mockEncontros";
 import FloatingCreateButton from "../components/FloatingCreateButton";
 
@@ -15,7 +17,7 @@ const imageByTipo: Record<EncontroTipo, string> = {
 };
 
 type MeuEncontro = Encontro & {
-  status: "Criado por voce" | "Confirmado" | "Lista de espera";
+  status: "Criado por voce" | "Confirmado";
 };
 
 function CardMeuEncontro({ item }: { item: MeuEncontro }) {
@@ -42,14 +44,12 @@ function CardMeuEncontro({ item }: { item: MeuEncontro }) {
           <View
             style={[
               styles.statusBadge,
-              item.status === "Lista de espera" && styles.statusWait,
               item.status === "Criado por voce" && styles.statusCreated,
             ]}
           >
             <Text
               style={[
                 styles.statusText,
-                item.status === "Lista de espera" && styles.statusWaitText,
                 item.status === "Criado por voce" && styles.statusCreatedText,
               ]}
             >
@@ -76,48 +76,94 @@ function CardMeuEncontro({ item }: { item: MeuEncontro }) {
 }
 
 export default function MeusEncontros() {
-  const encontros = useEncontros();
-  const meusEncontros: MeuEncontro[] = encontros.slice(0, 8).map((item, index) => {
-    if (item.anfitriao.toLowerCase() === "voce") {
-      return { ...item, status: "Criado por voce" };
-    }
-    return {
-      ...item,
-      status: index % 4 === 3 ? "Lista de espera" : "Confirmado",
-    };
-  });
+  const [meusEncontros, setMeusEncontros] = useState<MeuEncontro[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      async function loadMyEvents() {
+        try {
+          setIsLoading(true);
+          setError(null);
+          const response = await fetchMyEvents();
+          if (!isActive) {
+            return;
+          }
+
+          const created = response.created.map((item) => ({ ...item, status: "Criado por voce" as const }));
+          const joined = response.joined
+            .filter((item) => !created.some((createdItem) => createdItem.id === item.id))
+            .map((item) => ({ ...item, status: "Confirmado" as const }));
+
+          setMeusEncontros([...created, ...joined]);
+        } catch (loadError) {
+          if (isActive) {
+            setError(loadError instanceof Error ? loadError.message : "Nao foi possivel carregar seus encontros.");
+          }
+        } finally {
+          if (isActive) {
+            setIsLoading(false);
+          }
+        }
+      }
+
+      void loadMyEvents();
+
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.heading}>Meus encontros</Text>
-        <Text style={styles.subheading}>Acompanhe os encontros em que voce esta participando</Text>
+        <Text style={styles.subheading}>Acompanhe os encontros que voce criou e os que entrou</Text>
       </View>
 
       <View style={styles.summary}>
         <View style={styles.summaryCard}>
           <Text style={styles.summaryValue}>{meusEncontros.length}</Text>
-          <Text style={styles.summaryLabel}>Inscricoes</Text>
+          <Text style={styles.summaryLabel}>Total</Text>
         </View>
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryValue}>
-            {meusEncontros.filter((e) => e.status === "Confirmado" || e.status === "Criado por voce").length}
-          </Text>
-          <Text style={styles.summaryLabel}>Confirmados</Text>
+          <Text style={styles.summaryValue}>{meusEncontros.filter((e) => e.status === "Criado por voce").length}</Text>
+          <Text style={styles.summaryLabel}>Criados</Text>
         </View>
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryValue}>{meusEncontros.filter((e) => e.status === "Lista de espera").length}</Text>
-          <Text style={styles.summaryLabel}>Espera</Text>
+          <Text style={styles.summaryValue}>{meusEncontros.filter((e) => e.status === "Confirmado").length}</Text>
+          <Text style={styles.summaryLabel}>Participando</Text>
         </View>
       </View>
 
-      <FlatList
-        data={meusEncontros}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => <CardMeuEncontro item={item} />}
-        showsVerticalScrollIndicator={false}
-      />
+      {isLoading ? (
+        <View style={styles.feedbackContainer}>
+          <ActivityIndicator color="#0066FF" />
+          <Text style={styles.feedbackText}>Carregando seus encontros...</Text>
+        </View>
+      ) : error ? (
+        <View style={styles.feedbackContainer}>
+          <Text style={styles.feedbackTitle}>Nao foi possivel carregar</Text>
+          <Text style={styles.feedbackText}>{error}</Text>
+        </View>
+      ) : meusEncontros.length === 0 ? (
+        <View style={styles.feedbackContainer}>
+          <Text style={styles.feedbackTitle}>Voce ainda nao entrou em nenhum encontro</Text>
+          <Text style={styles.feedbackText}>Crie seu primeiro encontro ou participe de algum que combine com voce.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={meusEncontros}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          renderItem={({ item }) => <CardMeuEncontro item={item} />}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
       <FloatingCreateButton />
     </SafeAreaView>
   );
@@ -203,9 +249,6 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     backgroundColor: "#E9FBEF",
   },
-  statusWait: {
-    backgroundColor: "#FFF4E5",
-  },
   statusCreated: {
     backgroundColor: "#EAF2FF",
   },
@@ -213,9 +256,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     color: "#0E8A44",
-  },
-  statusWaitText: {
-    color: "#B45309",
   },
   statusCreatedText: {
     color: "#0B5ED7",
@@ -253,5 +293,23 @@ const styles = StyleSheet.create({
   },
   vagaWarn: {
     color: "#B42318",
+  },
+  feedbackContainer: {
+    flex: 1,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  feedbackTitle: {
+    color: "#0F172A",
+    fontSize: 18,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  feedbackText: {
+    color: "#64748B",
+    textAlign: "center",
+    lineHeight: 20,
   },
 });

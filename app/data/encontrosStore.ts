@@ -1,5 +1,5 @@
 import { useEffect, useSyncExternalStore } from "react";
-import { fetchEncontroById, fetchEncontros, postEncontro } from "../services/friendZoneApi";
+import { fetchEncontroById, fetchEncontros, joinEvent, leaveEvent, postEncontro } from "../services/friendZoneApi";
 import { encontrosMock, type Encontro, type NovoEncontroInput } from "./mockEncontros";
 
 type Listener = () => void;
@@ -56,6 +56,15 @@ function normalizeHora(hora: string) {
   return hora.length >= 5 ? hora.slice(0, 5) : hora;
 }
 
+function upsertEncontro(item: Encontro) {
+  const items = sortEncontros([item, ...encontrosState.items.filter((current) => current.id !== item.id)]);
+  setState({
+    ...encontrosState,
+    items,
+    isInitialized: true,
+  });
+}
+
 export async function hydrateEncontros(force = false) {
   if (pendingHydration && !force) {
     return pendingHydration;
@@ -103,12 +112,7 @@ export async function loadEncontroById(id: string) {
 
   try {
     const encontro = await fetchEncontroById(id);
-    const items = sortEncontros([encontro, ...encontrosState.items]);
-    setState({
-      ...encontrosState,
-      items,
-      source: "api",
-    });
+    upsertEncontro(encontro);
     return encontro;
   } catch {
     return null;
@@ -175,4 +179,34 @@ export async function addEncontro(input: NovoEncontroInput) {
 
     return novoEncontro;
   }
+}
+
+export async function refreshEncontro(id: string) {
+  try {
+    const encontro = await fetchEncontroById(id);
+    upsertEncontro(encontro);
+    return encontro;
+  } catch {
+    return null;
+  }
+}
+
+export async function joinEncontro(id: string) {
+  await joinEvent(id);
+  return refreshEncontro(id);
+}
+
+export async function leaveEncontro(id: string) {
+  await leaveEvent(id);
+  return refreshEncontro(id);
+}
+
+export function resetEncontrosState() {
+  setState({
+    items: [...encontrosMock],
+    isLoading: false,
+    isInitialized: false,
+    error: null,
+    source: "mock",
+  });
 }
