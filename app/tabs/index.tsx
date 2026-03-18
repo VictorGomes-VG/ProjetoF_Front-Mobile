@@ -8,6 +8,7 @@ import { type Encontro, type EncontroPreco, type EncontroTipo } from "../data/mo
 import FloatingCreateButton from "../components/FloatingCreateButton";
 import AvaliacaoInfo, { getMedalhaAvaliacao } from "../components/AvaliacaoInfo";
 import { useUserLocation } from "../hooks/useUserLocation";
+import { friendsZoneTheme } from "../theme";
 
 type TipoFiltro = "todos" | EncontroTipo;
 type PrecoFiltro = "todos" | EncontroPreco;
@@ -289,7 +290,8 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerCopy}>
+          <Text style={styles.eyebrow}>FriendsZone</Text>
           <Text style={styles.heading}>Friends Zones</Text>
           <Text style={styles.subheading}>Todos os encontros da comunidade</Text>
           <Text style={styles.locationHint}>
@@ -558,7 +560,7 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F4F7FB",
+    backgroundColor: friendsZoneTheme.colors.background,
   },
   header: {
     paddingHorizontal: 16,
@@ -569,26 +571,37 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 8,
   },
+  headerCopy: {
+    flex: 1,
+  },
+  eyebrow: {
+    color: friendsZoneTheme.colors.secondary,
+    fontSize: 12,
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    marginBottom: 2,
+  },
   heading: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
   },
   subheading: {
     fontSize: 13,
-    color: "#64748B",
+    color: friendsZoneTheme.colors.textMuted,
     marginTop: 2,
   },
   locationHint: {
     marginTop: 2,
     fontSize: 11,
-    color: "#475569",
+    color: friendsZoneTheme.colors.textSoft,
   },
   filterButton: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#D6DFEA",
-    backgroundColor: "#fff",
+    borderColor: friendsZoneTheme.colors.border,
+    backgroundColor: friendsZoneTheme.colors.surface,
     minHeight: 36,
     paddingHorizontal: 12,
     flexDirection: "row",
@@ -598,13 +611,13 @@ const styles = StyleSheet.create({
   filterButtonText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
   },
   filterBadge: {
     minWidth: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: "#0066FF",
+    backgroundColor: friendsZoneTheme.colors.secondary,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 4,
@@ -628,7 +641,7 @@ const styles = StyleSheet.create({
   paginationInfo: {
     textAlign: "center",
     fontSize: 12,
-    color: "#64748B",
+    color: friendsZoneTheme.colors.textMuted,
     fontWeight: "600",
   },
   paginationActions: {
@@ -638,18 +651,18 @@ const styles = StyleSheet.create({
   paginationButton: {
     flex: 1,
     minHeight: 40,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#CBD5E1",
-    backgroundColor: "#fff",
+    borderColor: friendsZoneTheme.colors.border,
+    backgroundColor: friendsZoneTheme.colors.surface,
     alignItems: "center",
     justifyContent: "center",
   },
   paginationButtonPrimary: {
     flex: 1,
     minHeight: 40,
-    borderRadius: 10,
-    backgroundColor: "#0066FF",
+    borderRadius: 14,
+    backgroundColor: friendsZoneTheme.colors.secondary,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -657,7 +670,7 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   paginationButtonText: {
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
     fontWeight: "700",
     fontSize: 13,
   },
@@ -667,17 +680,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   paginationButtonTextDisabled: {
-    color: "#64748B",
+    color: friendsZoneTheme.colors.textMuted,
   },
   card: {
-    borderRadius: 18,
-    backgroundColor: "#fff",
+    borderRadius: 22,
+    backgroundColor: friendsZoneTheme.colors.surface,
     overflow: "hidden",
-    elevation: 5,
-    shadowColor: "#0F172A",
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
+    borderWidth: 1,
+    borderColor: friendsZoneTheme.colors.border,
+    ...friendsZoneTheme.shadows.card,
   },
   image: {
     width: "100%",
@@ -693,7 +704,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   badge: {
-    backgroundColor: "#EEF2F7",
+    backgroundColor: friendsZoneTheme.colors.surfaceAlt,
     paddingHorizontal: 9,
     paddingVertical: 5,
     borderRadius: 999,
@@ -701,24 +712,24 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#334155",
+    color: friendsZoneTheme.colors.text,
   },
   badgeFree: {
-    backgroundColor: "#E9FBEF",
+    backgroundColor: friendsZoneTheme.colors.accentSoft,
   },
   badgePaid: {
-    backgroundColor: "#ECF2FF",
+    backgroundColor: friendsZoneTheme.colors.secondarySoft,
   },
   badgeFreeText: {
-    color: "#0E8A44",
+    color: friendsZoneTheme.colors.accent,
   },
   badgePaidText: {
-    color: "#0B5ED7",
+    color: friendsZoneTheme.colors.secondary,
   },
   title: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
   },
   ratingRow: {
     marginTop: 1,
@@ -730,7 +741,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: "#FFF7E6",
+    backgroundColor: friendsZoneTheme.colors.warningSoft,
     borderWidth: 1,
     borderColor: "#FCD34D",
   },
@@ -741,7 +752,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 13,
-    color: "#475569",
+    color: friendsZoneTheme.colors.textMuted,
     lineHeight: 19,
   },
   communityRow: {
@@ -754,13 +765,13 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: "#FFF1F3",
+    backgroundColor: friendsZoneTheme.colors.secondarySoft,
     borderWidth: 1,
-    borderColor: "#FFC8D0",
+    borderColor: "#F7B3A9",
   },
   communityText: {
     fontSize: 11,
-    color: "#B42343",
+    color: friendsZoneTheme.colors.secondary,
     fontWeight: "600",
   },
   infoRow: {
@@ -772,7 +783,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 12,
-    color: "#64748B",
+    color: friendsZoneTheme.colors.textMuted,
     marginRight: 8,
   },
   footerRow: {
@@ -783,27 +794,29 @@ const styles = StyleSheet.create({
   },
   hostText: {
     fontSize: 12,
-    color: "#334155",
+    color: friendsZoneTheme.colors.text,
   },
   vagaText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#0E8A44",
+    color: friendsZoneTheme.colors.accent,
   },
   vagaTextUrgente: {
     color: "#B42318",
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(15,23,42,0.45)",
+    backgroundColor: friendsZoneTheme.colors.overlay,
     justifyContent: "center",
     padding: 16,
   },
   modalCard: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
+    backgroundColor: friendsZoneTheme.colors.surface,
+    borderRadius: 22,
     padding: 14,
     gap: 8,
+    borderWidth: 1,
+    borderColor: friendsZoneTheme.colors.border,
   },
   modalHeader: {
     flexDirection: "row",
@@ -814,14 +827,14 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
   },
   modalSectionTitle: {
     marginTop: 8,
     marginBottom: 2,
     fontSize: 13,
     fontWeight: "700",
-    color: "#334155",
+    color: friendsZoneTheme.colors.text,
   },
   chipsRow: {
     gap: 8,
@@ -836,8 +849,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   chipActive: {
-    backgroundColor: "#0066FF",
-    borderColor: "#0066FF",
+    backgroundColor: friendsZoneTheme.colors.secondary,
+    borderColor: friendsZoneTheme.colors.secondary,
   },
   chipText: {
     fontSize: 12,
@@ -850,11 +863,11 @@ const styles = StyleSheet.create({
   modalInput: {
     minHeight: 42,
     borderWidth: 1,
-    borderColor: "#D6DFEA",
+    borderColor: friendsZoneTheme.colors.border,
     borderRadius: 10,
     paddingHorizontal: 10,
-    color: "#0F172A",
-    backgroundColor: "#FAFCFF",
+    color: friendsZoneTheme.colors.text,
+    backgroundColor: friendsZoneTheme.colors.surfaceAlt,
   },
   dateRow: {
     flexDirection: "row",
@@ -883,7 +896,7 @@ const styles = StyleSheet.create({
   },
   dateClearText: {
     fontSize: 12,
-    color: "#0B5ED7",
+    color: friendsZoneTheme.colors.secondary,
     fontWeight: "600",
   },
   distanceRow: {
@@ -909,20 +922,21 @@ const styles = StyleSheet.create({
   clearButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#D6DFEA",
-    borderRadius: 10,
+    borderColor: friendsZoneTheme.colors.border,
+    borderRadius: 14,
     minHeight: 42,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: friendsZoneTheme.colors.surfaceAlt,
   },
   clearButtonText: {
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
     fontWeight: "600",
   },
   applyButton: {
     flex: 1.2,
-    backgroundColor: "#0066FF",
-    borderRadius: 10,
+    backgroundColor: friendsZoneTheme.colors.secondary,
+    borderRadius: 14,
     minHeight: 42,
     alignItems: "center",
     justifyContent: "center",
@@ -932,10 +946,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   calendarCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
+    backgroundColor: friendsZoneTheme.colors.surface,
+    borderRadius: 20,
     padding: 14,
     gap: 10,
+    borderWidth: 1,
+    borderColor: friendsZoneTheme.colors.border,
   },
   calendarHeader: {
     flexDirection: "row",
@@ -945,7 +961,7 @@ const styles = StyleSheet.create({
   calendarTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
   },
   weekRow: {
     flexDirection: "row",
@@ -969,10 +985,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   dayCellSelected: {
-    backgroundColor: "#0066FF",
+    backgroundColor: friendsZoneTheme.colors.secondary,
   },
   dayText: {
-    color: "#334155",
+    color: friendsZoneTheme.colors.text,
     fontWeight: "600",
   },
   dayTextSelected: {
@@ -981,14 +997,15 @@ const styles = StyleSheet.create({
   calendarClose: {
     marginTop: 4,
     minHeight: 42,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#CBD5E1",
+    borderColor: friendsZoneTheme.colors.border,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: friendsZoneTheme.colors.surfaceAlt,
   },
   calendarCloseText: {
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
     fontWeight: "700",
   },
 });

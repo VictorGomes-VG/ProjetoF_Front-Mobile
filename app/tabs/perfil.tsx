@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Tex
 import { useFocusEffect } from "@react-navigation/native";
 import { logout, useAuthSession } from "../data/authStore";
 import { fetchMyEvents } from "../services/friendZoneApi";
+import { friendsZoneTheme } from "../theme";
 
 type ProfileStats = {
   createdCount: number;
@@ -153,7 +154,7 @@ export default function Perfil() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#EEF3FA",
+    backgroundColor: friendsZoneTheme.colors.background,
   },
   content: {
     padding: 14,
@@ -162,13 +163,15 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   heroCard: {
-    backgroundColor: "#fff",
+    backgroundColor: friendsZoneTheme.colors.surface,
     borderRadius: 18,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: friendsZoneTheme.colors.border,
   },
   cover: {
     height: 110,
-    backgroundColor: "#0A66C2",
+    backgroundColor: friendsZoneTheme.colors.secondary,
   },
   profileBlock: {
     paddingHorizontal: 14,
@@ -191,17 +194,17 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 21,
     fontWeight: "700",
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
   },
   headline: {
     marginTop: 2,
     fontSize: 13,
-    color: "#334155",
+    color: friendsZoneTheme.colors.text,
     fontWeight: "500",
   },
   locationText: {
     marginTop: 6,
-    color: "#64748B",
+    color: friendsZoneTheme.colors.textMuted,
     fontSize: 12,
   },
   statsRow: {
@@ -218,26 +221,28 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#0A66C2",
+    color: friendsZoneTheme.colors.secondary,
   },
   statLabel: {
     marginTop: 2,
     fontSize: 12,
-    color: "#64748B",
+    color: friendsZoneTheme.colors.textMuted,
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: friendsZoneTheme.colors.surface,
     borderRadius: 16,
     padding: 14,
     gap: 8,
+    borderWidth: 1,
+    borderColor: friendsZoneTheme.colors.border,
   },
   cardTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
   },
   bioText: {
-    color: "#334155",
+    color: friendsZoneTheme.colors.text,
     lineHeight: 20,
   },
   summaryRow: {
@@ -248,17 +253,17 @@ const styles = StyleSheet.create({
     minHeight: 30,
   },
   summaryLabel: {
-    color: "#334155",
+    color: friendsZoneTheme.colors.text,
     flex: 1,
   },
   summaryValue: {
-    color: "#0B5ED7",
+    color: friendsZoneTheme.colors.secondary,
     fontWeight: "700",
     fontSize: 16,
   },
   separator: {
     height: 1,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: friendsZoneTheme.colors.border,
   },
   loadingRow: {
     flexDirection: "row",
@@ -266,14 +271,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   loadingText: {
-    color: "#64748B",
+    color: friendsZoneTheme.colors.textMuted,
   },
   logoutButton: {
     minHeight: 48,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#0F172A",
+    backgroundColor: friendsZoneTheme.colors.secondary,
   },
   logoutButtonText: {
     color: "#FFFFFF",
@@ -286,11 +291,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#CBD5E1",
-    backgroundColor: "#FFFFFF",
+    borderColor: friendsZoneTheme.colors.border,
+    backgroundColor: friendsZoneTheme.colors.surfaceAlt,
   },
   secondaryButtonText: {
-    color: "#334155",
+    color: friendsZoneTheme.colors.text,
     fontWeight: "700",
   },
 });

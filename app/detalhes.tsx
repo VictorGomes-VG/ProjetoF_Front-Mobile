@@ -6,6 +6,7 @@ import { useAuthSession } from "./data/authStore";
 import { joinEncontro, leaveEncontro, loadEncontroById, useEncontros, useEncontrosStatus } from "./data/encontrosStore";
 import { type EncontroTipo } from "./data/mockEncontros";
 import AvaliacaoInfo, { getMedalhaAvaliacao } from "./components/AvaliacaoInfo";
+import { friendsZoneTheme } from "./theme";
 
 const tipoLabel: Record<EncontroTipo, string> = {
   esporte: "Esporte",
@@ -42,6 +43,7 @@ export default function Detalhes() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0066FF" />
+        
         <Text style={styles.loadingText}>Carregando encontro...</Text>
       </View>
     );
@@ -200,7 +202,7 @@ export default function Detalhes() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F4F7FB",
+    backgroundColor: friendsZoneTheme.colors.background,
   },
   heroContainer: {
     position: "relative",
@@ -217,7 +219,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.92)",
+    backgroundColor: "rgba(255,248,242,0.95)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -225,7 +227,7 @@ const styles = StyleSheet.create({
     marginTop: -14,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
-    backgroundColor: "#F4F7FB",
+    backgroundColor: friendsZoneTheme.colors.background,
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 24,
@@ -239,34 +241,34 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: "#EAF2FF",
+    backgroundColor: friendsZoneTheme.colors.primarySoft,
   },
   badgeText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#0B5ED7",
+    color: friendsZoneTheme.colors.primary,
   },
   freeBadge: {
-    backgroundColor: "#E9FBEF",
+    backgroundColor: friendsZoneTheme.colors.accentSoft,
   },
   paidBadge: {
-    backgroundColor: "#ECF2FF",
+    backgroundColor: friendsZoneTheme.colors.secondarySoft,
   },
   freeText: {
-    color: "#0E8A44",
+    color: friendsZoneTheme.colors.accent,
   },
   paidText: {
-    color: "#0B5ED7",
+    color: friendsZoneTheme.colors.secondary,
   },
   title: {
     fontSize: 26,
     fontWeight: "700",
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
   },
   subtitle: {
     marginTop: 2,
     fontSize: 14,
-    color: "#64748B",
+    color: friendsZoneTheme.colors.textMuted,
   },
   ratingRow: {
     marginTop: 8,
@@ -278,9 +280,9 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 9,
     paddingVertical: 4,
-    backgroundColor: "#FFF7E6",
+    backgroundColor: friendsZoneTheme.colors.warningSoft,
     borderWidth: 1,
-    borderColor: "#FCD34D",
+    borderColor: "#F2C078",
   },
   medalhaText: {
     fontSize: 11,
@@ -289,8 +291,8 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     marginTop: 14,
-    backgroundColor: "#fff",
-    borderRadius: 14,
+    backgroundColor: friendsZoneTheme.colors.surface,
+    borderRadius: 18,
     padding: 12,
     gap: 10,
   },
@@ -301,7 +303,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     flex: 1,
-    color: "#334155",
+    color: friendsZoneTheme.colors.text,
     fontSize: 14,
   },
   warningText: {
@@ -312,13 +314,13 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     fontWeight: "700",
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
   },
   description: {
     marginTop: 6,
     fontSize: 15,
     lineHeight: 22,
-    color: "#334155",
+    color: friendsZoneTheme.colors.text,
   },
   tagsRow: {
     marginTop: 10,
@@ -330,19 +332,19 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: "#FFF1F3",
+    backgroundColor: friendsZoneTheme.colors.secondarySoft,
     borderWidth: 1,
-    borderColor: "#FFC8D0",
+    borderColor: "#F7B3A9",
   },
   tagText: {
     fontSize: 12,
-    color: "#B42343",
+    color: friendsZoneTheme.colors.secondary,
     fontWeight: "600",
   },
   ctaCard: {
     marginTop: 18,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    backgroundColor: friendsZoneTheme.colors.surface,
+    borderRadius: 18,
     padding: 14,
     gap: 10,
   },
@@ -354,15 +356,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   joinButton: {
-    backgroundColor: "#0B5ED7",
+    backgroundColor: friendsZoneTheme.colors.secondary,
   },
   leaveButton: {
-    backgroundColor: "#FFF1F2",
+    backgroundColor: friendsZoneTheme.colors.secondarySoft,
     borderWidth: 1,
-    borderColor: "#FECDD3",
+    borderColor: "#F7B3A9",
   },
   ownerButton: {
-    backgroundColor: "#EAF2FF",
+    backgroundColor: friendsZoneTheme.colors.primarySoft,
   },
   ctaDisabled: {
     opacity: 0.6,
@@ -376,18 +378,18 @@ const styles = StyleSheet.create({
     color: "#B42318",
   },
   ownerButtonText: {
-    color: "#0B5ED7",
+    color: friendsZoneTheme.colors.primary,
     fontWeight: "700",
     fontSize: 14,
   },
   ctaHint: {
-    color: "#64748B",
+    color: friendsZoneTheme.colors.textMuted,
     lineHeight: 19,
     fontSize: 13,
   },
   emptyContainer: {
     flex: 1,
-    backgroundColor: "#F4F7FB",
+    backgroundColor: friendsZoneTheme.colors.background,
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
@@ -395,26 +397,26 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: "#F4F7FB",
+    backgroundColor: friendsZoneTheme.colors.background,
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
   },
   loadingText: {
-    color: "#64748B",
+    color: friendsZoneTheme.colors.textMuted,
   },
   emptyTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
   },
   emptyText: {
-    color: "#64748B",
+    color: friendsZoneTheme.colors.textMuted,
     textAlign: "center",
   },
   backButton: {
     marginTop: 6,
-    backgroundColor: "#0066FF",
+    backgroundColor: friendsZoneTheme.colors.secondary,
     borderRadius: 10,
     minHeight: 40,
     paddingHorizontal: 14,

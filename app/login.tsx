@@ -13,6 +13,7 @@ import {
 import { Redirect, router } from "expo-router";
 import { login, register, useAuthSession } from "./data/authStore";
 import { hydrateEncontros, resetEncontrosState } from "./data/encontrosStore";
+import { friendsZoneTheme } from "./theme";
 
 const demoCredentials = {
   email: "marina@friendszone.app",
@@ -82,7 +83,7 @@ export default function Login() {
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.container}>
       <View style={styles.hero}>
         <Text style={styles.kicker}>FriendsZone MVP</Text>
-        <Text style={styles.title}>Encontre sua proxima conexao fora da tela.</Text>
+        <Text style={styles.title}>Encontre sua proxima conexao no seu bairro.</Text>
         <Text style={styles.subtitle}>
           Entre com uma conta seedada ou crie sua conta para listar, criar e participar de encontros.
         </Text>
@@ -169,7 +170,7 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#EFF6FF",
+    backgroundColor: friendsZoneTheme.colors.background,
     justifyContent: "center",
     padding: 20,
     gap: 18,
@@ -178,7 +179,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   kicker: {
-    color: "#0B5ED7",
+    color: friendsZoneTheme.colors.secondary,
     fontSize: 13,
     fontWeight: "700",
     textTransform: "uppercase",
@@ -188,28 +189,26 @@ const styles = StyleSheet.create({
     fontSize: 30,
     lineHeight: 36,
     fontWeight: "800",
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
   },
   subtitle: {
-    color: "#475569",
+    color: friendsZoneTheme.colors.textMuted,
     fontSize: 15,
     lineHeight: 22,
   },
   card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 22,
+    backgroundColor: friendsZoneTheme.colors.surface,
+    borderRadius: 28,
     padding: 18,
     gap: 10,
-    shadowColor: "#0F172A",
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
+    borderWidth: 1,
+    borderColor: friendsZoneTheme.colors.border,
+    ...friendsZoneTheme.shadows.card,
   },
   toggleRow: {
     flexDirection: "row",
-    backgroundColor: "#E2E8F0",
-    borderRadius: 14,
+    backgroundColor: friendsZoneTheme.colors.surfaceMuted,
+    borderRadius: 16,
     padding: 4,
     marginBottom: 6,
   },
@@ -221,28 +220,28 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   toggleButtonActive: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: friendsZoneTheme.colors.surface,
   },
   toggleText: {
-    color: "#475569",
+    color: friendsZoneTheme.colors.textMuted,
     fontWeight: "700",
   },
   toggleTextActive: {
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
   },
   label: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#334155",
+    color: friendsZoneTheme.colors.text,
   },
   input: {
     minHeight: 46,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#CBD5E1",
-    backgroundColor: "#F8FAFC",
+    borderColor: friendsZoneTheme.colors.border,
+    backgroundColor: friendsZoneTheme.colors.surfaceAlt,
     paddingHorizontal: 12,
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
   },
   multiline: {
     minHeight: 88,
@@ -250,14 +249,14 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   errorText: {
-    color: "#B42318",
+    color: friendsZoneTheme.colors.danger,
     fontSize: 13,
     fontWeight: "600",
   },
   primaryButton: {
     minHeight: 50,
     borderRadius: 14,
-    backgroundColor: "#0B5ED7",
+    backgroundColor: friendsZoneTheme.colors.secondary,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 4,
@@ -274,16 +273,17 @@ const styles = StyleSheet.create({
     minHeight: 44,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#BFDBFE",
+    borderColor: friendsZoneTheme.colors.borderStrong,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: friendsZoneTheme.colors.surfaceAlt,
   },
   secondaryButtonText: {
-    color: "#0B5ED7",
+    color: friendsZoneTheme.colors.text,
     fontWeight: "700",
   },
   helperText: {
-    color: "#64748B",
+    color: friendsZoneTheme.colors.textSoft,
     fontSize: 12,
     lineHeight: 18,
     textAlign: "center",
@@ -292,6 +292,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#EFF6FF",
+    backgroundColor: friendsZoneTheme.colors.background,
   },
 });

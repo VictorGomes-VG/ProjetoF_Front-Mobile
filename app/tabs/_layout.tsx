@@ -1,6 +1,7 @@
 import { Redirect, Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthSession } from "../data/authStore";
+import { friendsZoneTheme } from "../theme";
 
 export default function Layout() {
   const session = useAuthSession();
@@ -17,8 +18,8 @@ export default function Layout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#0066FF",
-        tabBarInactiveTintColor: "#64748B",
+        tabBarActiveTintColor: friendsZoneTheme.colors.secondary,
+        tabBarInactiveTintColor: friendsZoneTheme.colors.textMuted,
         tabBarLabelStyle: { fontSize: 11, fontWeight: "600", marginTop: -1 },
         tabBarItemStyle: { borderRadius: 12 },
         tabBarHideOnKeyboard: true,
@@ -29,14 +30,14 @@ export default function Layout() {
           bottom: 12,
           height: 66,
           borderTopWidth: 0,
-          borderRadius: 18,
+          borderRadius: 22,
           paddingBottom: 8,
           paddingTop: 8,
-          backgroundColor: "#FFFFFF",
+          backgroundColor: friendsZoneTheme.colors.surface,
           elevation: 10,
-          shadowColor: "#0F172A",
-          shadowOpacity: 0.12,
-          shadowRadius: 12,
+          shadowColor: "#7C5338",
+          shadowOpacity: 0.14,
+          shadowRadius: 18,
           shadowOffset: { width: 0, height: 4 },
         },
       }}

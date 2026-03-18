@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { fetchMyEvents } from "../services/friendZoneApi";
 import { type Encontro, type EncontroTipo } from "../data/mockEncontros";
 import FloatingCreateButton from "../components/FloatingCreateButton";
+import { friendsZoneTheme } from "../theme";
 
 const imageByTipo: Record<EncontroTipo, string> = {
   esporte: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=900&q=80",
@@ -172,7 +173,7 @@ export default function MeusEncontros() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F4F7FB",
+    backgroundColor: friendsZoneTheme.colors.background,
   },
   header: {
     paddingHorizontal: 16,
@@ -182,11 +183,11 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
   },
   subheading: {
     marginTop: 3,
-    color: "#64748B",
+    color: friendsZoneTheme.colors.textMuted,
     fontSize: 13,
   },
   summary: {
@@ -205,12 +206,12 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#0066FF",
+    color: friendsZoneTheme.colors.secondary,
   },
   summaryLabel: {
     marginTop: 2,
     fontSize: 12,
-    color: "#64748B",
+    color: friendsZoneTheme.colors.textMuted,
   },
   listContent: {
     paddingHorizontal: 16,
@@ -219,9 +220,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
+    backgroundColor: friendsZoneTheme.colors.surface,
+    borderRadius: 20,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: friendsZoneTheme.colors.border,
   },
   cardImage: {
     width: "100%",
@@ -241,7 +244,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: "700",
-    color: "#0F172A",
+    color: friendsZoneTheme.colors.text,
   },
   statusBadge: {
     borderRadius: 999,
@@ -250,7 +253,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#E9FBEF",
   },
   statusCreated: {
-    backgroundColor: "#EAF2FF",
+    backgroundColor: friendsZoneTheme.colors.secondarySoft,
   },
   statusText: {
     fontSize: 11,
@@ -258,7 +261,7 @@ const styles = StyleSheet.create({
     color: "#0E8A44",
   },
   statusCreatedText: {
-    color: "#0B5ED7",
+    color: friendsZoneTheme.colors.secondary,
   },
   cardSubtitle: {
     marginTop: 4,

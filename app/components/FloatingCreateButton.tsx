@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { friendsZoneTheme } from "../theme";
 
 export default function FloatingCreateButton() {
   return (
@@ -16,18 +17,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 16,
     bottom: 98,
-    backgroundColor: "#0066FF",
-    minHeight: 46,
+    backgroundColor: friendsZoneTheme.colors.secondary,
+    minHeight: 48,
     borderRadius: 999,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    elevation: 5,
-    shadowColor: "#0F172A",
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
+    gap: 6,
+    ...friendsZoneTheme.shadows.card,
   },
   text: {
     color: "#fff",
