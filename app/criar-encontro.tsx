@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import {
   ActivityIndicator,
   Alert,
@@ -86,8 +87,8 @@ export default function CriarEncontro() {
   const [bairro, setBairro] = useState("");
   const [endereco, setEndereco] = useState("");
   const [imagemUrl, setImagemUrl] = useState<string | undefined>();
-  const [data, setData] = useState("2026-02-28");
-  const [hora, setHora] = useState("19:00");
+  const [dataHora, setDataHora] = useState(() => new Date(2026, 1, 28, 19, 0, 0));
+  const [pickerMode, setPickerMode] = useState<"date" | "time" | null>(null);
   const [capacidade, setCapacidade] = useState("12");
   const [tipo, setTipo] = useState<EncontroTipo>("networking");
   const [comunidadeTags, setComunidadeTags] = useState<string[]>(["Tech"]);
@@ -145,6 +146,35 @@ export default function CriarEncontro() {
   }
 
   const coverPreview = imagemUrl || coverByType[tipo];
+  const data = formatDateValue(dataHora);
+  const hora = formatTimeValue(dataHora);
+
+  function openPicker(mode: "date" | "time") {
+    setPickerMode(mode);
+  }
+
+  function handleDateTimeChange(event: DateTimePickerEvent, selectedDate?: Date) {
+    if (event.type === "dismissed") {
+      setPickerMode(null);
+      return;
+    }
+
+    if (selectedDate) {
+      setDataHora((current) => {
+        if (pickerMode === "time") {
+          const next = new Date(current);
+          next.setHours(selectedDate.getHours(), selectedDate.getMinutes(), 0, 0);
+          return next;
+        }
+
+        const next = new Date(current);
+        next.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+        return next;
+      });
+    }
+
+    setPickerMode(null);
+  }
 
   useEffect(() => {
     if (!mapaAberto) {
@@ -307,14 +337,6 @@ export default function CriarEncontro() {
               multiline
             />
 
-            <Text style={styles.label}>Imagem do encontro</Text>
-            <View style={styles.imagePickerCard}>
-              <Text style={styles.imagePickerHint}>
-                {imagemUrl
-                  ? "Toque no lapis da capa para trocar a imagem."
-                  : "Toque no lapis da capa para escolher uma imagem do celular."}
-              </Text>
-            </View>
           </View>
 
           <View style={styles.sectionCard}>
@@ -339,9 +361,6 @@ export default function CriarEncontro() {
                 <Ionicons name="map-outline" size={16} color="#0B5ED7" />
                 <Text style={styles.mapButtonText}>Escolher no mapa</Text>
               </Pressable>
-              <View style={styles.locationBadge}>
-                <Text style={styles.locationBadgeText}>{endereco.trim() ? "Endereco confirmado" : "Pin do encontro definido"}</Text>
-              </View>
             </View>
             {resolvendoEndereco ? (
               <View style={styles.addressStatusRow}>
@@ -352,12 +371,18 @@ export default function CriarEncontro() {
 
             <View style={styles.row}>
               <View style={styles.col}>
-                <Text style={styles.label}>Data (YYYY-MM-DD)</Text>
-                <TextInput value={data} onChangeText={setData} style={styles.input} />
+                <Text style={styles.label}>Data</Text>
+                <Pressable style={styles.inputButton} onPress={() => openPicker("date")}>
+                  <Ionicons name="calendar-outline" size={16} color="#64748B" />
+                  <Text style={styles.inputButtonText}>{data}</Text>
+                </Pressable>
               </View>
               <View style={styles.col}>
-                <Text style={styles.label}>Hora (HH:MM)</Text>
-                <TextInput value={hora} onChangeText={setHora} style={styles.input} />
+                <Text style={styles.label}>Hora</Text>
+                <Pressable style={styles.inputButton} onPress={() => openPicker("time")}>
+                  <Ionicons name="time-outline" size={16} color="#64748B" />
+                  <Text style={styles.inputButtonText}>{hora}</Text>
+                </Pressable>
               </View>
             </View>
           </View>
@@ -432,6 +457,15 @@ export default function CriarEncontro() {
         </ScrollView>
       </KeyboardAvoidingView>
 
+      {pickerMode ? (
+        <DateTimePicker
+          value={dataHora}
+          mode={pickerMode}
+          display={Platform.OS === "ios" ? "spinner" : "default"}
+          onChange={handleDateTimeChange}
+        />
+      ) : null}
+
       <Modal visible={mapaAberto} animationType="slide" onRequestClose={() => setMapaAberto(false)}>
         <SafeAreaView style={styles.mapModalContainer}>
           <View style={styles.mapModalHeader}>
@@ -486,6 +520,19 @@ export default function CriarEncontro() {
       </Modal>
     </SafeAreaView>
   );
+}
+
+function formatDateValue(value: Date) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatTimeValue(value: Date) {
+  const hours = String(value.getHours()).padStart(2, "0");
+  const minutes = String(value.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
 }
 
 const styles = StyleSheet.create({
@@ -624,6 +671,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     color: "#0F172A",
   },
+  inputButton: {
+    minHeight: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#D6DFEA",
+    backgroundColor: "#fff",
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  inputButtonText: {
+    color: "#0F172A",
+    fontWeight: "600",
+  },
   mapActionsRow: {
     marginTop: 8,
     flexDirection: "row",
@@ -643,36 +705,6 @@ const styles = StyleSheet.create({
     color: "#0B5ED7",
     fontWeight: "700",
     fontSize: 13,
-  },
-  locationBadge: {
-    flex: 1,
-    minHeight: 42,
-    borderRadius: 12,
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#D6DFEA",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 10,
-  },
-  locationBadgeText: {
-    color: "#475569",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  imagePickerCard: {
-    minHeight: 58,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#D6DFEA",
-    backgroundColor: "#fff",
-    padding: 12,
-    justifyContent: "center",
-  },
-  imagePickerHint: {
-    color: "#64748B",
-    fontSize: 12,
-    lineHeight: 18,
   },
   addressStatusRow: {
     marginTop: 8,
