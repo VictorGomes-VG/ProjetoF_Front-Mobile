@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -62,6 +63,14 @@ function randomCoordinate() {
 const DEFAULT_COORDINATE = {
   latitude: -23.5606,
   longitude: -46.6614,
+};
+
+const coverByType: Record<EncontroTipo, string> = {
+  esporte: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1200&q=80",
+  networking: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80",
+  games: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80",
+  musica: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1200&q=80",
+  cafe: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80",
 };
 
 export default function CriarEncontro() {
@@ -134,6 +143,8 @@ export default function CriarEncontro() {
       setImagemUrl(result.assets[0].uri);
     }
   }
+
+  const coverPreview = imagemUrl || coverByType[tipo];
 
   useEffect(() => {
     if (!mapaAberto) {
@@ -256,129 +267,171 @@ export default function CriarEncontro() {
           <Pressable style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={18} color="#0F172A" />
           </Pressable>
-          <Text style={styles.title}>Criar encontro</Text>
+          <View style={styles.headerText}>
+            <Text style={styles.title}>Criar encontro</Text>
+            <Text style={styles.subtitle}>Monte um role com a cara da sua comunidade.</Text>
+          </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Text style={styles.label}>Titulo</Text>
-          <TextInput value={titulo} onChangeText={setTitulo} style={styles.input} placeholder="Ex: Cine e conversa" />
-
-          <Text style={styles.label}>Descricao</Text>
-          <TextInput
-            value={descricao}
-            onChangeText={setDescricao}
-            style={[styles.input, styles.multiline]}
-            placeholder="Conte como sera o encontro"
-            multiline
-          />
-
-          <Text style={styles.label}>Cidade</Text>
-          <TextInput value={cidade} onChangeText={setCidade} style={styles.input} placeholder="Ex: Sao Paulo" />
-
-          <Text style={styles.label}>Bairro</Text>
-          <TextInput value={bairro} onChangeText={setBairro} style={styles.input} placeholder="Ex: Pinheiros" />
-
-          <Text style={styles.label}>Endereco</Text>
-          <TextInput
-            value={endereco}
-            onChangeText={setEndereco}
-            style={styles.input}
-            placeholder="Ex: Rua dos Pinheiros, 220"
-          />
-          <View style={styles.mapActionsRow}>
-            <Pressable style={styles.mapButton} onPress={openMapPicker}>
-              <Ionicons name="map-outline" size={16} color="#0B5ED7" />
-              <Text style={styles.mapButtonText}>Escolher no mapa</Text>
-            </Pressable>
-            <View style={styles.locationBadge}>
-              <Text style={styles.locationBadgeText}>Pin do encontro definido</Text>
-            </View>
-          </View>
-          {resolvendoEndereco ? (
-            <View style={styles.addressStatusRow}>
-              <ActivityIndicator size="small" color="#0B5ED7" />
-              <Text style={styles.addressStatusText}>Atualizando endereco a partir do pin...</Text>
-            </View>
-          ) : null}
-
-          <Text style={styles.label}>Imagem do encontro</Text>
-          <View style={styles.imagePickerCard}>
-            <Pressable style={styles.imagePickerButton} onPress={() => void pickImageFromGallery()}>
-              <Ionicons name="image-outline" size={16} color="#0B5ED7" />
-              <Text style={styles.imagePickerButtonText}>
-                {imagemUrl ? "Trocar imagem da galeria" : "Escolher da galeria"}
+          <View style={styles.coverCard}>
+            <Image source={{ uri: coverPreview }} style={styles.coverPreview} />
+            <View style={styles.coverOverlay} />
+            <View style={styles.coverContent}>
+              <View style={styles.coverBadge}>
+                <Text style={styles.coverBadgeText}>{labelsTipo[tipo]}</Text>
+              </View>
+              <Text style={styles.coverTitle}>{titulo.trim() || "Seu encontro vai aparecer assim"}</Text>
+              <Text style={styles.coverMeta}>
+                {[bairro.trim() || "Bairro", data.trim() || "Data", hora.trim() || "Hora"].join(" • ")}
               </Text>
-            </Pressable>
-            <Text style={styles.imagePickerHint}>
-              {imagemUrl ? "Imagem selecionada com sucesso." : "Selecione uma foto do celular para ilustrar o encontro."}
-            </Text>
-          </View>
-
-          <View style={styles.row}>
-            <View style={styles.col}>
-              <Text style={styles.label}>Data (YYYY-MM-DD)</Text>
-              <TextInput value={data} onChangeText={setData} style={styles.input} />
-            </View>
-            <View style={styles.col}>
-              <Text style={styles.label}>Hora (HH:MM)</Text>
-              <TextInput value={hora} onChangeText={setHora} style={styles.input} />
             </View>
           </View>
 
-          <Text style={styles.label}>Capacidade</Text>
-          <TextInput
-            value={capacidade}
-            onChangeText={setCapacidade}
-            style={styles.input}
-            keyboardType="number-pad"
-            placeholder="Ex: 15"
-          />
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Identidade do encontro</Text>
+            <Text style={styles.sectionDescription}>Capriche no nome, no clima e na imagem para chamar as pessoas certas.</Text>
 
-          <Text style={styles.label}>Tipo</Text>
-          <View style={styles.chipsRow}>
-            {tipos.map((item) => (
-              <Pressable key={item} onPress={() => setTipo(item)} style={[styles.chip, tipo === item && styles.chipActive]}>
-                <Text style={[styles.chipText, tipo === item && styles.chipTextActive]}>{labelsTipo[item]}</Text>
+            <Text style={styles.label}>Titulo</Text>
+            <TextInput value={titulo} onChangeText={setTitulo} style={styles.input} placeholder="Ex: Cine e conversa" />
+
+            <Text style={styles.label}>Descricao</Text>
+            <TextInput
+              value={descricao}
+              onChangeText={setDescricao}
+              style={[styles.input, styles.multiline]}
+              placeholder="Conte como sera o encontro"
+              multiline
+            />
+
+            <Text style={styles.label}>Imagem do encontro</Text>
+            <View style={styles.imagePickerCard}>
+              <Pressable style={styles.imagePickerButton} onPress={() => void pickImageFromGallery()}>
+                <Ionicons name="image-outline" size={16} color="#0B5ED7" />
+                <Text style={styles.imagePickerButtonText}>
+                  {imagemUrl ? "Trocar imagem da galeria" : "Escolher da galeria"}
+                </Text>
               </Pressable>
-            ))}
+              <Text style={styles.imagePickerHint}>
+                {imagemUrl
+                  ? "Preview atualizado. Essa imagem sera usada como capa do encontro."
+                  : "Selecione uma foto do celular para ilustrar o encontro."}
+              </Text>
+            </View>
           </View>
 
-          <Text style={styles.label}>Comunidades</Text>
-          <View style={styles.chipsRow}>
-            {comunidadeTagsDisponiveis.map((tag) => {
-              const selected = comunidadeTags.includes(tag);
-              return (
-                <Pressable
-                  key={tag}
-                  onPress={() =>
-                    setComunidadeTags((prev) =>
-                      prev.includes(tag) ? prev.filter((item) => item !== tag) : [...prev, tag]
-                    )
-                  }
-                  style={[styles.chip, selected && styles.chipActive]}
-                >
-                  <Text style={[styles.chipText, selected && styles.chipTextActive]}>{tag}</Text>
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Local e horario</Text>
+            <Text style={styles.sectionDescription}>Defina onde a galera vai se encontrar e facilite com o pin no mapa.</Text>
+
+            <Text style={styles.label}>Cidade</Text>
+            <TextInput value={cidade} onChangeText={setCidade} style={styles.input} placeholder="Ex: Sao Paulo" />
+
+            <Text style={styles.label}>Bairro</Text>
+            <TextInput value={bairro} onChangeText={setBairro} style={styles.input} placeholder="Ex: Pinheiros" />
+
+            <Text style={styles.label}>Endereco</Text>
+            <TextInput
+              value={endereco}
+              onChangeText={setEndereco}
+              style={styles.input}
+              placeholder="Ex: Rua dos Pinheiros, 220"
+            />
+            <View style={styles.mapActionsRow}>
+              <Pressable style={styles.mapButton} onPress={openMapPicker}>
+                <Ionicons name="map-outline" size={16} color="#0B5ED7" />
+                <Text style={styles.mapButtonText}>Escolher no mapa</Text>
+              </Pressable>
+              <View style={styles.locationBadge}>
+                <Text style={styles.locationBadgeText}>{endereco.trim() ? "Endereco confirmado" : "Pin do encontro definido"}</Text>
+              </View>
+            </View>
+            {resolvendoEndereco ? (
+              <View style={styles.addressStatusRow}>
+                <ActivityIndicator size="small" color="#0B5ED7" />
+                <Text style={styles.addressStatusText}>Atualizando endereco a partir do pin...</Text>
+              </View>
+            ) : null}
+
+            <View style={styles.row}>
+              <View style={styles.col}>
+                <Text style={styles.label}>Data (YYYY-MM-DD)</Text>
+                <TextInput value={data} onChangeText={setData} style={styles.input} />
+              </View>
+              <View style={styles.col}>
+                <Text style={styles.label}>Hora (HH:MM)</Text>
+                <TextInput value={hora} onChangeText={setHora} style={styles.input} />
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Formato e comunidades</Text>
+            <Text style={styles.sectionDescription}>Defina o tipo de encontro, o publico e quantas pessoas cabem.</Text>
+
+            <Text style={styles.label}>Capacidade</Text>
+            <TextInput
+              value={capacidade}
+              onChangeText={setCapacidade}
+              style={styles.input}
+              keyboardType="number-pad"
+              placeholder="Ex: 15"
+            />
+
+            <Text style={styles.label}>Tipo</Text>
+            <View style={styles.chipsRow}>
+              {tipos.map((item) => (
+                <Pressable key={item} onPress={() => setTipo(item)} style={[styles.chip, tipo === item && styles.chipActive]}>
+                  <Text style={[styles.chipText, tipo === item && styles.chipTextActive]}>{labelsTipo[item]}</Text>
                 </Pressable>
-              );
-            })}
+              ))}
+            </View>
+
+            <Text style={styles.label}>Comunidades</Text>
+            <View style={styles.chipsRow}>
+              {comunidadeTagsDisponiveis.map((tag) => {
+                const selected = comunidadeTags.includes(tag);
+                return (
+                  <Pressable
+                    key={tag}
+                    onPress={() =>
+                      setComunidadeTags((prev) =>
+                        prev.includes(tag) ? prev.filter((item) => item !== tag) : [...prev, tag]
+                      )
+                    }
+                    style={[styles.chip, selected && styles.chipActive]}
+                  >
+                    <Text style={[styles.chipText, selected && styles.chipTextActive]}>{tag}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.label}>Preco</Text>
+            <View style={styles.chipsRow}>
+              {precos.map((item) => (
+                <Pressable
+                  key={item}
+                  onPress={() => setPreco(item)}
+                  style={[styles.chip, preco === item && styles.chipActive]}
+                >
+                  <Text style={[styles.chipText, preco === item && styles.chipTextActive]}>{labelsPreco[item]}</Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
 
-          <Text style={styles.label}>Preco</Text>
-          <View style={styles.chipsRow}>
-            {precos.map((item) => (
-              <Pressable
-                key={item}
-                onPress={() => setPreco(item)}
-                style={[styles.chip, preco === item && styles.chipActive]}
-              >
-                <Text style={[styles.chipText, preco === item && styles.chipTextActive]}>{labelsPreco[item]}</Text>
-              </Pressable>
-            ))}
+          <View style={styles.submitCard}>
+            <View style={styles.submitSummary}>
+              <Text style={styles.submitSummaryTitle}>Pronto para publicar?</Text>
+              <Text style={styles.submitSummaryText}>
+                Revise a capa, o local e as comunidades. Depois seu encontro ja aparece para outras pessoas.
+              </Text>
+            </View>
+            <Pressable style={[styles.saveButton, salvando && styles.saveButtonDisabled]} onPress={() => void salvarEncontro()} disabled={salvando}>
+              <Text style={styles.saveButtonText}>{salvando ? "Publicando..." : "Publicar encontro"}</Text>
+            </Pressable>
           </View>
-
-          <Pressable style={[styles.saveButton, salvando && styles.saveButtonDisabled]} onPress={() => void salvarEncontro()} disabled={salvando}>
-            <Text style={styles.saveButtonText}>{salvando ? "Publicando..." : "Publicar encontro"}</Text>
-          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -454,6 +507,9 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 6,
   },
+  headerText: {
+    flex: 1,
+  },
   backButton: {
     width: 36,
     height: 36,
@@ -467,10 +523,82 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#0F172A",
   },
+  subtitle: {
+    marginTop: 2,
+    color: "#64748B",
+    fontSize: 13,
+  },
   content: {
     padding: 16,
     paddingBottom: 40,
+    gap: 14,
+  },
+  coverCard: {
+    height: 214,
+    borderRadius: 22,
+    overflow: "hidden",
+    backgroundColor: "#D6DFEA",
+  },
+  coverPreview: {
+    width: "100%",
+    height: "100%",
+  },
+  coverOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(15,23,42,0.32)",
+  },
+  coverContent: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    bottom: 16,
     gap: 8,
+  },
+  coverBadge: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.28)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  coverBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  coverTitle: {
+    color: "#FFFFFF",
+    fontSize: 26,
+    lineHeight: 31,
+    fontWeight: "800",
+  },
+  coverMeta: {
+    color: "rgba(255,255,255,0.88)",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  sectionCard: {
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    padding: 14,
+    gap: 8,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  sectionTitle: {
+    color: "#0F172A",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  sectionDescription: {
+    color: "#64748B",
+    fontSize: 13,
+    lineHeight: 18,
   },
   label: {
     marginTop: 6,
@@ -602,7 +730,6 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   saveButton: {
-    marginTop: 14,
     minHeight: 48,
     borderRadius: 12,
     backgroundColor: "#0066FF",
@@ -616,6 +743,25 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 15,
     fontWeight: "700",
+  },
+  submitCard: {
+    borderRadius: 18,
+    backgroundColor: "#0F172A",
+    padding: 14,
+    gap: 12,
+  },
+  submitSummary: {
+    gap: 4,
+  },
+  submitSummaryTitle: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "700",
+  },
+  submitSummaryText: {
+    color: "rgba(255,255,255,0.74)",
+    lineHeight: 19,
+    fontSize: 13,
   },
   mapModalContainer: {
     flex: 1,
