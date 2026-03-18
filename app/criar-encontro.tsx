@@ -277,6 +277,9 @@ export default function CriarEncontro() {
           <View style={styles.coverCard}>
             <Image source={{ uri: coverPreview }} style={styles.coverPreview} />
             <View style={styles.coverOverlay} />
+            <Pressable style={styles.coverEditButton} onPress={() => void pickImageFromGallery()}>
+              <Ionicons name="pencil" size={16} color="#0F172A" />
+            </Pressable>
             <View style={styles.coverContent}>
               <View style={styles.coverBadge}>
                 <Text style={styles.coverBadgeText}>{labelsTipo[tipo]}</Text>
@@ -306,16 +309,10 @@ export default function CriarEncontro() {
 
             <Text style={styles.label}>Imagem do encontro</Text>
             <View style={styles.imagePickerCard}>
-              <Pressable style={styles.imagePickerButton} onPress={() => void pickImageFromGallery()}>
-                <Ionicons name="image-outline" size={16} color="#0B5ED7" />
-                <Text style={styles.imagePickerButtonText}>
-                  {imagemUrl ? "Trocar imagem da galeria" : "Escolher da galeria"}
-                </Text>
-              </Pressable>
               <Text style={styles.imagePickerHint}>
                 {imagemUrl
-                  ? "Preview atualizado. Essa imagem sera usada como capa do encontro."
-                  : "Selecione uma foto do celular para ilustrar o encontro."}
+                  ? "Toque no lapis da capa para trocar a imagem."
+                  : "Toque no lapis da capa para escolher uma imagem do celular."}
               </Text>
             </View>
           </View>
@@ -554,6 +551,18 @@ const styles = StyleSheet.create({
     bottom: 16,
     gap: 8,
   },
+  coverEditButton: {
+    position: "absolute",
+    top: 14,
+    right: 14,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2,
+  },
   coverBadge: {
     alignSelf: "flex-start",
     borderRadius: 999,
@@ -652,29 +661,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   imagePickerCard: {
-    minHeight: 76,
+    minHeight: 58,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#D6DFEA",
     backgroundColor: "#fff",
     padding: 12,
-    gap: 8,
     justifyContent: "center",
-  },
-  imagePickerButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    alignSelf: "flex-start",
-    paddingHorizontal: 12,
-    minHeight: 40,
-    borderRadius: 10,
-    backgroundColor: "#EAF2FF",
-  },
-  imagePickerButtonText: {
-    color: "#0B5ED7",
-    fontWeight: "700",
-    fontSize: 13,
   },
   imagePickerHint: {
     color: "#64748B",
