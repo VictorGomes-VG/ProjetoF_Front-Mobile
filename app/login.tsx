@@ -28,6 +28,14 @@ export default function Login() {
   const [email, setEmail] = useState(demoCredentials.email);
   const [password, setPassword] = useState(demoCredentials.password);
 
+  if (!session.isInitialized) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0B5ED7" />
+      </View>
+    );
+  }
+
   if (session.user) {
     return <Redirect href="/tabs" />;
   }
@@ -279,5 +287,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     textAlign: "center",
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#EFF6FF",
   },
 });

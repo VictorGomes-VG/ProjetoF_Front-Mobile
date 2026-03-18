@@ -5,6 +5,10 @@ import { useAuthSession } from "../data/authStore";
 export default function Layout() {
   const session = useAuthSession();
 
+  if (!session.isInitialized) {
+    return null;
+  }
+
   if (!session.user) {
     return <Redirect href="/login" />;
   }

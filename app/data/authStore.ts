@@ -1,3 +1,4 @@
+import * as SecureStore from "expo-secure-store";
 import { useSyncExternalStore } from "react";
 import {
   type AuthPayload,
@@ -28,14 +29,16 @@ type RegisterInput = {
 };
 
 const listeners = new Set<Listener>();
+const ACCESS_TOKEN_KEY = "friendszone.access_token";
 
 let authState: AuthState = {
   user: null,
   accessToken: null,
   isLoading: false,
-  isInitialized: true,
+  isInitialized: false,
   error: null,
 };
+let pendingInitialization: Promise<void> | null = null;
 
 function emitChange() {
   listeners.forEach((listener) => listener());
@@ -57,8 +60,18 @@ function getSnapshot() {
   return authState;
 }
 
-function applySession(payload: AuthPayload | null) {
+async function persistAccessToken(nextAccessToken: string | null) {
+  if (nextAccessToken) {
+    await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, nextAccessToken);
+    return;
+  }
+
+  await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
+}
+
+async function applySession(payload: AuthPayload | null) {
   setApiAccessToken(payload?.accessToken ?? null);
+  await persistAccessToken(payload?.accessToken ?? null);
   if (!payload) {
     resetEncontrosState();
   }
@@ -79,6 +92,54 @@ export function useAuthSession() {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
+export async function initializeAuthSession() {
+  if (pendingInitialization) {
+    return pendingInitialization;
+  }
+
+  pendingInitialization = (async () => {
+    try {
+      const storedToken = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+
+      if (!storedToken) {
+        setApiAccessToken(null);
+        setState({
+          ...authState,
+          accessToken: null,
+          user: null,
+          error: null,
+          isInitialized: true,
+        });
+        return;
+      }
+
+      setApiAccessToken(storedToken);
+      const user = await fetchCurrentUser();
+      setState({
+        user,
+        accessToken: storedToken,
+        isLoading: false,
+        isInitialized: true,
+        error: null,
+      });
+    } catch {
+      setApiAccessToken(null);
+      await persistAccessToken(null);
+      setState({
+        user: null,
+        accessToken: null,
+        isLoading: false,
+        isInitialized: true,
+        error: null,
+      });
+    } finally {
+      pendingInitialization = null;
+    }
+  })();
+
+  return pendingInitialization;
+}
+
 export async function login(email: string, password: string) {
   setState({
     ...authState,
@@ -88,7 +149,7 @@ export async function login(email: string, password: string) {
 
   try {
     const payload = await loginWithPassword(email, password);
-    applySession(payload);
+    await applySession(payload);
     return payload.user;
   } catch (error) {
     const message = getErrorMessage(error, "Nao foi possivel entrar.");
@@ -111,7 +172,7 @@ export async function register(input: RegisterInput) {
 
   try {
     const payload = await registerUser(input);
-    applySession(payload);
+    await applySession(payload);
     return payload.user;
   } catch (error) {
     const message = getErrorMessage(error, "Nao foi possivel criar sua conta.");
@@ -139,11 +200,11 @@ export async function refreshCurrentUser() {
     });
     return user;
   } catch (error) {
-    applySession(null);
+    await applySession(null);
     throw error;
   }
 }
 
 export function logout() {
-  applySession(null);
+  void applySession(null);
 }
