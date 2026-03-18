@@ -37,6 +37,8 @@ type UserProfileApiResponse = {
   email: string;
   city: string;
   bio: string;
+  plan: "starter" | "plus" | "friend";
+  maxEventCapacity: number;
 };
 
 type AuthTokenApiResponse = {
@@ -60,6 +62,8 @@ export type UserProfile = {
   email: string;
   city: string;
   bio: string;
+  plan: "starter" | "plus" | "friend";
+  maxEventCapacity: number;
 };
 
 export type AuthPayload = {
@@ -132,8 +136,6 @@ function toEventPayload(input: NovoEncontroInput) {
     imageUrl: input.imagemUrl,
     rating: input.nota ?? 5,
     totalRatings: input.totalAvaliacoes ?? 1,
-    participants: input.participantes,
-    capacity: input.capacidade,
     latitude: input.latitude,
     longitude: input.longitude,
   };
@@ -146,6 +148,8 @@ function normalizeUser(item: UserProfileApiResponse): UserProfile {
     email: item.email,
     city: item.city,
     bio: item.bio,
+    plan: item.plan,
+    maxEventCapacity: item.maxEventCapacity,
   };
 }
 

@@ -53,6 +53,30 @@ const labelsPreco: Record<EncontroPreco, string> = {
   pago: "Pago",
 };
 
+const PLAN_OPTIONS = [
+  {
+    id: "starter",
+    name: "Starter",
+    capacity: 4,
+    description: "Ate 4 pessoas, incluindo voce.",
+    active: true,
+  },
+  {
+    id: "plus",
+    name: "Plus",
+    capacity: 8,
+    description: "Mais vagas para encontros maiores.",
+    active: false,
+  },
+  {
+    id: "friend",
+    name: "Friend",
+    capacity: 12,
+    description: "Ideal para comunidades e roles recorrentes.",
+    active: false,
+  },
+] as const;
+
 function randomCoordinate() {
   const baseLat = -23.5606;
   const baseLng = -46.6614;
@@ -89,13 +113,14 @@ export default function CriarEncontro() {
   const [imagemUrl, setImagemUrl] = useState<string | undefined>();
   const [dataHora, setDataHora] = useState(() => new Date(2026, 1, 28, 19, 0, 0));
   const [pickerMode, setPickerMode] = useState<"date" | "time" | null>(null);
-  const [capacidade, setCapacidade] = useState("12");
   const [tipo, setTipo] = useState<EncontroTipo>("networking");
   const [comunidadeTags, setComunidadeTags] = useState<string[]>(["Tech"]);
   const [preco, setPreco] = useState<EncontroPreco>("gratis");
   const [selectedCoordinate, setSelectedCoordinate] = useState(DEFAULT_COORDINATE);
   const [draftCoordinate, setDraftCoordinate] = useState(DEFAULT_COORDINATE);
   const [draftAddress, setDraftAddress] = useState("Toque no mapa para escolher um endereco.");
+  const maxEventCapacity = session.user?.maxEventCapacity ?? 4;
+  const currentPlan = session.user?.plan ?? "starter";
 
   async function applyCoordinateDetails(latitude: number, longitude: number) {
     setResolvendoEndereco(true);
@@ -245,13 +270,8 @@ export default function CriarEncontro() {
   }
 
   const salvarEncontro = async () => {
-    const capacidadeNumero = Number(capacidade);
     if (!titulo.trim() || !descricao.trim() || !cidade.trim() || !bairro.trim() || !endereco.trim()) {
       Alert.alert("Campos obrigatorios", "Preencha titulo, descricao, cidade, bairro e endereco.");
-      return;
-    }
-    if (!Number.isFinite(capacidadeNumero) || capacidadeNumero < 2) {
-      Alert.alert("Capacidade invalida", "Informe uma capacidade maior ou igual a 2.");
       return;
     }
 
@@ -272,7 +292,7 @@ export default function CriarEncontro() {
         endereco: endereco.trim(),
         imagemUrl,
         participantes: 1,
-        capacidade: capacidadeNumero,
+        capacidade: maxEventCapacity,
         latitude: coord.latitude,
         longitude: coord.longitude,
       });
@@ -389,16 +409,46 @@ export default function CriarEncontro() {
 
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Formato e comunidades</Text>
-            <Text style={styles.sectionDescription}>Defina o tipo de encontro, o publico e quantas pessoas cabem.</Text>
+            <Text style={styles.sectionDescription}>Defina o tipo do encontro e veja o limite de pessoas disponivel no seu plano atual.</Text>
 
-            <Text style={styles.label}>Capacidade</Text>
-            <TextInput
-              value={capacidade}
-              onChangeText={setCapacidade}
-              style={styles.input}
-              keyboardType="number-pad"
-              placeholder="Ex: 15"
-            />
+            <Text style={styles.label}>Plano atual e proximos niveis</Text>
+            <View style={styles.planList}>
+              {PLAN_OPTIONS.map((plan) => (
+                <View
+                  key={plan.id}
+                  style={[styles.planCard, currentPlan === plan.id && styles.planCardActive]}
+                >
+                  <View style={styles.planHeader}>
+                    <Text style={[styles.planName, currentPlan === plan.id && styles.planNameActive]}>{plan.name}</Text>
+                    <View
+                      style={[
+                        styles.planBadge,
+                        currentPlan === plan.id ? styles.planBadgeActive : styles.planBadgeLocked,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.planBadgeText,
+                          currentPlan === plan.id ? styles.planBadgeTextActive : styles.planBadgeTextLocked,
+                        ]}
+                      >
+                        {currentPlan === plan.id ? "Seu plano" : "Em breve"}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.planCapacity, currentPlan === plan.id && styles.planCapacityActive]}>
+                    {`${plan.capacity} pessoas`}
+                  </Text>
+                  <Text style={styles.planDescription}>{plan.description}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.capacityInfoCard}>
+              <Ionicons name="people-outline" size={16} color="#0B5ED7" />
+              <Text style={styles.capacityInfoText}>
+                Seu plano atual permite ate {maxEventCapacity} pessoas no total, contando com o anfitriao.
+              </Text>
+            </View>
 
             <Text style={styles.label}>Tipo</Text>
             <View style={styles.chipsRow}>
@@ -733,6 +783,87 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 8,
     marginBottom: 4,
+  },
+  planList: {
+    gap: 10,
+    marginTop: 2,
+    marginBottom: 6,
+  },
+  planCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#D6DFEA",
+    backgroundColor: "#F8FAFC",
+    padding: 12,
+    gap: 6,
+  },
+  planCardActive: {
+    borderColor: "#BFDBFE",
+    backgroundColor: "#EFF6FF",
+  },
+  planHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8,
+  },
+  planName: {
+    color: "#0F172A",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  planNameActive: {
+    color: "#0B5ED7",
+  },
+  planBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+  },
+  planBadgeActive: {
+    backgroundColor: "#DBEAFE",
+  },
+  planBadgeLocked: {
+    backgroundColor: "#E2E8F0",
+  },
+  planBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  planBadgeTextActive: {
+    color: "#0B5ED7",
+  },
+  planBadgeTextLocked: {
+    color: "#64748B",
+  },
+  planCapacity: {
+    color: "#0F172A",
+    fontSize: 20,
+    fontWeight: "800",
+  },
+  planCapacityActive: {
+    color: "#0B5ED7",
+  },
+  planDescription: {
+    color: "#64748B",
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  capacityInfoCard: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "flex-start",
+    borderRadius: 12,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#D6DFEA",
+    padding: 12,
+  },
+  capacityInfoText: {
+    flex: 1,
+    color: "#334155",
+    fontSize: 12,
+    lineHeight: 18,
   },
   chip: {
     borderWidth: 1,
