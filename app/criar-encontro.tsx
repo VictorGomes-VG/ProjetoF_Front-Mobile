@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import MapView, { Marker, type MapPressEvent } from "react-native-maps";
 import { useAuthSession } from "./data/authStore";
@@ -69,12 +70,13 @@ export default function CriarEncontro() {
   const [salvando, setSalvando] = useState(false);
   const [mapaAberto, setMapaAberto] = useState(false);
   const [resolvendoEndereco, setResolvendoEndereco] = useState(false);
+  const [resolvendoPin, setResolvendoPin] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [cidade, setCidade] = useState("Sao Paulo");
   const [bairro, setBairro] = useState("");
   const [endereco, setEndereco] = useState("");
-  const [imagemUrl, setImagemUrl] = useState("");
+  const [imagemUrl, setImagemUrl] = useState<string | undefined>();
   const [data, setData] = useState("2026-02-28");
   const [hora, setHora] = useState("19:00");
   const [capacidade, setCapacidade] = useState("12");
@@ -83,6 +85,7 @@ export default function CriarEncontro() {
   const [preco, setPreco] = useState<EncontroPreco>("gratis");
   const [selectedCoordinate, setSelectedCoordinate] = useState(DEFAULT_COORDINATE);
   const [draftCoordinate, setDraftCoordinate] = useState(DEFAULT_COORDINATE);
+  const [draftAddress, setDraftAddress] = useState("Toque no mapa para escolher um endereco.");
 
   async function applyCoordinateDetails(latitude: number, longitude: number) {
     setResolvendoEndereco(true);
@@ -113,9 +116,74 @@ export default function CriarEncontro() {
     }
   }
 
+  async function pickImageFromGallery() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Permissao necessaria", "Permita o acesso a galeria para escolher uma imagem do encontro.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]?.uri) {
+      setImagemUrl(result.assets[0].uri);
+    }
+  }
+
+  useEffect(() => {
+    if (!mapaAberto) {
+      return;
+    }
+
+    let isActive = true;
+    const timeoutId = setTimeout(async () => {
+      try {
+        setResolvendoPin(true);
+        const [result] = await Location.reverseGeocodeAsync({
+          latitude: draftCoordinate.latitude,
+          longitude: draftCoordinate.longitude,
+        });
+
+        if (!isActive) {
+          return;
+        }
+
+        if (!result) {
+          setDraftAddress("Endereco nao identificado. Voce pode confirmar mesmo assim.");
+          return;
+        }
+
+        const primaryLine = [result.street, result.streetNumber].filter(Boolean).join(", ");
+        const secondaryParts = [result.district, result.city || result.subregion].filter(Boolean).join(" • ");
+        const formatted = [primaryLine, secondaryParts].filter(Boolean).join("\n");
+
+        setDraftAddress(formatted || "Endereco nao identificado. Voce pode confirmar mesmo assim.");
+      } catch {
+        if (isActive) {
+          setDraftAddress("Nao foi possivel identificar o endereco deste pin.");
+        }
+      } finally {
+        if (isActive) {
+          setResolvendoPin(false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      isActive = false;
+      clearTimeout(timeoutId);
+    };
+  }, [draftCoordinate, mapaAberto]);
+
   function openMapPicker() {
     const baseCoordinate = selectedCoordinate ?? userLocation ?? DEFAULT_COORDINATE;
     setDraftCoordinate(baseCoordinate);
+    setDraftAddress(endereco || "Toque no mapa para escolher um endereco.");
     setMapaAberto(true);
   }
 
@@ -161,7 +229,7 @@ export default function CriarEncontro() {
         cidade: cidade.trim(),
         bairro: bairro.trim(),
         endereco: endereco.trim(),
-        imagemUrl: imagemUrl.trim() || undefined,
+        imagemUrl,
         participantes: 1,
         capacidade: capacidadeNumero,
         latitude: coord.latitude,
@@ -222,10 +290,8 @@ export default function CriarEncontro() {
               <Ionicons name="map-outline" size={16} color="#0B5ED7" />
               <Text style={styles.mapButtonText}>Escolher no mapa</Text>
             </Pressable>
-            <View style={styles.coordinateBadge}>
-              <Text style={styles.coordinateBadgeText}>
-                {`${selectedCoordinate.latitude.toFixed(4)}, ${selectedCoordinate.longitude.toFixed(4)}`}
-              </Text>
+            <View style={styles.locationBadge}>
+              <Text style={styles.locationBadgeText}>Pin do encontro definido</Text>
             </View>
           </View>
           {resolvendoEndereco ? (
@@ -235,14 +301,18 @@ export default function CriarEncontro() {
             </View>
           ) : null}
 
-          <Text style={styles.label}>Imagem do encontro (URL)</Text>
-          <TextInput
-            value={imagemUrl}
-            onChangeText={setImagemUrl}
-            style={styles.input}
-            placeholder="https://..."
-            autoCapitalize="none"
-          />
+          <Text style={styles.label}>Imagem do encontro</Text>
+          <View style={styles.imagePickerCard}>
+            <Pressable style={styles.imagePickerButton} onPress={() => void pickImageFromGallery()}>
+              <Ionicons name="image-outline" size={16} color="#0B5ED7" />
+              <Text style={styles.imagePickerButtonText}>
+                {imagemUrl ? "Trocar imagem da galeria" : "Escolher da galeria"}
+              </Text>
+            </Pressable>
+            <Text style={styles.imagePickerHint}>
+              {imagemUrl ? "Imagem selecionada com sucesso." : "Selecione uma foto do celular para ilustrar o encontro."}
+            </Text>
+          </View>
 
           <View style={styles.row}>
             <View style={styles.col}>
@@ -344,12 +414,15 @@ export default function CriarEncontro() {
 
           <View style={styles.mapSheet}>
             <Text style={styles.mapSheetTitle}>Pin selecionado</Text>
-            <Text style={styles.mapSheetCoords}>
-              {`${draftCoordinate.latitude.toFixed(6)}, ${draftCoordinate.longitude.toFixed(6)}`}
-            </Text>
-            <Text style={styles.mapSheetHint}>
-              Depois de confirmar, vamos tentar preencher endereco, bairro e cidade automaticamente.
-            </Text>
+            {resolvendoPin ? (
+              <View style={styles.mapAddressLoadingRow}>
+                <ActivityIndicator size="small" color="#0B5ED7" />
+                <Text style={styles.mapAddressLoadingText}>Buscando endereco do pin...</Text>
+              </View>
+            ) : (
+              <Text style={styles.mapSheetAddress}>{draftAddress}</Text>
+            )}
+            <Text style={styles.mapSheetHint}>Depois de confirmar, vamos preencher endereco, bairro e cidade automaticamente quando possivel.</Text>
             <View style={styles.mapSheetActions}>
               <Pressable style={styles.secondaryActionButton} onPress={() => void pickCurrentLocation()}>
                 <Text style={styles.secondaryActionButtonText}>Usar minha localizacao</Text>
@@ -434,7 +507,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 13,
   },
-  coordinateBadge: {
+  locationBadge: {
     flex: 1,
     minHeight: 42,
     borderRadius: 12,
@@ -445,10 +518,40 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 10,
   },
-  coordinateBadgeText: {
+  locationBadgeText: {
     color: "#475569",
     fontSize: 12,
     fontWeight: "600",
+  },
+  imagePickerCard: {
+    minHeight: 76,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#D6DFEA",
+    backgroundColor: "#fff",
+    padding: 12,
+    gap: 8,
+    justifyContent: "center",
+  },
+  imagePickerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    minHeight: 40,
+    borderRadius: 10,
+    backgroundColor: "#EAF2FF",
+  },
+  imagePickerButtonText: {
+    color: "#0B5ED7",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  imagePickerHint: {
+    color: "#64748B",
+    fontSize: 12,
+    lineHeight: 18,
   },
   addressStatusRow: {
     marginTop: 8,
@@ -553,6 +656,21 @@ const styles = StyleSheet.create({
     color: "#0B5ED7",
     fontSize: 13,
     fontWeight: "700",
+  },
+  mapSheetAddress: {
+    color: "#0F172A",
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "600",
+  },
+  mapAddressLoadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  mapAddressLoadingText: {
+    color: "#475569",
+    fontSize: 13,
   },
   mapSheetHint: {
     color: "#64748B",
