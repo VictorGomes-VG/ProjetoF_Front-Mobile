@@ -53,6 +53,7 @@ function randomCoordinate() {
 }
 
 export default function CriarEncontro() {
+  const [salvando, setSalvando] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [cidade, setCidade] = useState("Sao Paulo");
@@ -66,7 +67,7 @@ export default function CriarEncontro() {
   const [comunidadeTags, setComunidadeTags] = useState<string[]>(["Tech"]);
   const [preco, setPreco] = useState<EncontroPreco>("gratis");
 
-  const salvarEncontro = () => {
+  const salvarEncontro = async () => {
     const capacidadeNumero = Number(capacidade);
     if (!titulo.trim() || !descricao.trim() || !cidade.trim() || !bairro.trim() || !endereco.trim()) {
       Alert.alert("Campos obrigatorios", "Preencha titulo, descricao, cidade, bairro e endereco.");
@@ -78,31 +79,38 @@ export default function CriarEncontro() {
     }
 
     const coord = randomCoordinate();
-    addEncontro({
-      titulo: titulo.trim(),
-      descricao: descricao.trim(),
-      tipo,
-      comunidadeTags,
-      preco,
-      data: data.trim(),
-      hora: hora.trim(),
-      anfitriao: "Voce",
-      cidade: cidade.trim(),
-      bairro: bairro.trim(),
-      endereco: endereco.trim(),
-      imagemUrl: imagemUrl.trim() || undefined,
-      participantes: 1,
-      capacidade: capacidadeNumero,
-      latitude: coord.latitude,
-      longitude: coord.longitude,
-    });
+    try {
+      setSalvando(true);
+      await addEncontro({
+        titulo: titulo.trim(),
+        descricao: descricao.trim(),
+        tipo,
+        comunidadeTags,
+        preco,
+        data: data.trim(),
+        hora: hora.trim(),
+        anfitriao: "Voce",
+        cidade: cidade.trim(),
+        bairro: bairro.trim(),
+        endereco: endereco.trim(),
+        imagemUrl: imagemUrl.trim() || undefined,
+        participantes: 1,
+        capacidade: capacidadeNumero,
+        latitude: coord.latitude,
+        longitude: coord.longitude,
+      });
 
-    Alert.alert("Encontro criado", "Seu encontro foi publicado com sucesso.", [
-      {
-        text: "OK",
-        onPress: () => router.replace("/tabs/locais"),
-      },
-    ]);
+      Alert.alert("Encontro criado", "Seu encontro foi publicado com sucesso.", [
+        {
+          text: "OK",
+          onPress: () => router.replace("/tabs/locais"),
+        },
+      ]);
+    } catch {
+      Alert.alert("Falha ao criar", "Nao foi possivel publicar o encontro.");
+    } finally {
+      setSalvando(false);
+    }
   };
 
   return (
@@ -213,8 +221,8 @@ export default function CriarEncontro() {
             ))}
           </View>
 
-          <Pressable style={styles.saveButton} onPress={salvarEncontro}>
-            <Text style={styles.saveButtonText}>Publicar encontro</Text>
+          <Pressable style={[styles.saveButton, salvando && styles.saveButtonDisabled]} onPress={() => void salvarEncontro()} disabled={salvando}>
+            <Text style={styles.saveButtonText}>{salvando ? "Publicando..." : "Publicar encontro"}</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -316,6 +324,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#0066FF",
     alignItems: "center",
     justifyContent: "center",
+  },
+  saveButtonDisabled: {
+    opacity: 0.7,
   },
   saveButtonText: {
     color: "#fff",

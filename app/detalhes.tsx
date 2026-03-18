@@ -1,7 +1,8 @@
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect } from "react";
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useEncontros } from "./data/encontrosStore";
+import { loadEncontroById, useEncontros, useEncontrosStatus } from "./data/encontrosStore";
 import { type EncontroTipo } from "./data/mockEncontros";
 import AvaliacaoInfo, { getMedalhaAvaliacao } from "./components/AvaliacaoInfo";
 
@@ -23,9 +24,25 @@ const fallbackImageByTipo: Record<EncontroTipo, string> = {
 
 export default function Detalhes() {
   const encontros = useEncontros();
+  const { isLoading, isInitialized } = useEncontrosStatus();
   const params = useLocalSearchParams<{ id?: string; nome?: string; tipo?: string; descricao?: string }>();
 
   const encontro = encontros.find((item) => item.id === params.id);
+
+  useEffect(() => {
+    if (params.id && !encontro) {
+      void loadEncontroById(params.id);
+    }
+  }, [encontro, params.id]);
+
+  if ((!isInitialized || isLoading) && !encontro) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0066FF" />
+        <Text style={styles.loadingText}>Carregando encontro...</Text>
+      </View>
+    );
+  }
 
   if (!encontro) {
     return (
@@ -265,6 +282,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 24,
     gap: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#F4F7FB",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  loadingText: {
+    color: "#64748B",
   },
   emptyTitle: {
     fontSize: 22,

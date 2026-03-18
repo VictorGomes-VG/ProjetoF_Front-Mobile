@@ -24,6 +24,27 @@ export type Encontro = {
   longitude: number;
 };
 
+export type NovoEncontroInput = {
+  titulo: string;
+  descricao: string;
+  tipo: EncontroTipo;
+  comunidadeTags: string[];
+  preco: EncontroPreco;
+  data: string;
+  hora: string;
+  anfitriao: string;
+  cidade: string;
+  bairro: string;
+  endereco: string;
+  imagemUrl?: string;
+  nota?: number;
+  totalAvaliacoes?: number;
+  participantes: number;
+  capacidade: number;
+  latitude: number;
+  longitude: number;
+};
+
 export const encontrosMock: Encontro[] = [
   {
     id: "enc-1",

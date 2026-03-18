@@ -1,6 +1,6 @@
 import { View, Text } from "react-native";
 import MapView, { Callout, Marker } from "react-native-maps";
-import { encontrosMock } from "../data/mockEncontros";
+import { useEncontros } from "../data/encontrosStore";
 
 const corPorTipo = {
   esporte: "#2B9348",
@@ -11,6 +11,8 @@ const corPorTipo = {
 };
 
 export default function MapaComMarcadores() {
+  const encontros = useEncontros();
+
   return (
     <MapView
       style={{ flex: 1 }}
@@ -21,7 +23,7 @@ export default function MapaComMarcadores() {
         longitudeDelta: 0.12,
       }}
     >
-      {encontrosMock.map((encontro) => (
+      {encontros.map((encontro) => (
         <Marker
           key={encontro.id}
           coordinate={{ latitude: encontro.latitude, longitude: encontro.longitude }}
