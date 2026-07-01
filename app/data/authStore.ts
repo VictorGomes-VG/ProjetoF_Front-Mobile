@@ -26,6 +26,7 @@ type RegisterInput = {
   password: string;
   city: string;
   bio: string;
+  interests: string[];
 };
 
 const listeners = new Set<Listener>();

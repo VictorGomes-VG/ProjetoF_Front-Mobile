@@ -4,10 +4,13 @@ import { useFocusEffect } from "@react-navigation/native";
 import { logout, useAuthSession } from "../data/authStore";
 import { fetchMyEvents } from "../services/friendZoneApi";
 import { friendsZoneTheme } from "../theme";
+import { getEventTimelineBucket } from "../utils/eventTimeline";
 
 type ProfileStats = {
   createdCount: number;
   joinedCount: number;
+  upcomingCount: number;
+  historyCount: number;
   averageRating: number;
   totalRatings: number;
 };
@@ -17,6 +20,8 @@ export default function Perfil() {
   const [stats, setStats] = useState<ProfileStats>({
     createdCount: 0,
     joinedCount: 0,
+    upcomingCount: 0,
+    historyCount: 0,
     averageRating: 0,
     totalRatings: 0,
   });
@@ -36,10 +41,15 @@ export default function Perfil() {
 
           const totalRatings = response.created.reduce((sum, item) => sum + item.totalAvaliacoes, 0);
           const weightedRating = response.created.reduce((sum, item) => sum + item.nota * item.totalAvaliacoes, 0);
+          const mergedEvents = [...response.created, ...response.joined.filter((item) => !response.created.some((created) => created.id === item.id))];
+          const upcomingCount = mergedEvents.filter((item) => getEventTimelineBucket(item) === "upcoming").length;
+          const historyCount = mergedEvents.length - upcomingCount;
 
           setStats({
             createdCount: response.created.length,
             joinedCount: response.joined.length,
+            upcomingCount,
+            historyCount,
             averageRating: totalRatings > 0 ? weightedRating / totalRatings : 0,
             totalRatings,
           });
@@ -48,6 +58,8 @@ export default function Perfil() {
             setStats({
               createdCount: 0,
               joinedCount: 0,
+              upcomingCount: 0,
+              historyCount: 0,
               averageRating: 0,
               totalRatings: 0,
             });
@@ -109,6 +121,21 @@ export default function Perfil() {
       </View>
 
       <View style={styles.card}>
+        <Text style={styles.cardTitle}>Seus interesses</Text>
+        <View style={styles.interestsWrap}>
+          {(session.user?.interests ?? []).length > 0 ? (
+            session.user?.interests.map((interest) => (
+              <View key={interest} style={styles.interestChip}>
+                <Text style={styles.interestChipText}>{interest}</Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.emptyInterestsText}>Adicione interesses no cadastro para receber encontros mais alinhados.</Text>
+          )}
+        </View>
+      </View>
+
+      <View style={styles.card}>
         <Text style={styles.cardTitle}>Resumo da conta</Text>
         {isLoading ? (
           <View style={styles.loadingRow}>
@@ -125,6 +152,16 @@ export default function Perfil() {
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Eventos participando</Text>
               <Text style={styles.summaryValue}>{stats.joinedCount}</Text>
+            </View>
+            <View style={styles.separator} />
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Na sua agenda</Text>
+              <Text style={styles.summaryValue}>{stats.upcomingCount}</Text>
+            </View>
+            <View style={styles.separator} />
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>No historico</Text>
+              <Text style={styles.summaryValue}>{stats.historyCount}</Text>
             </View>
             <View style={styles.separator} />
             <View style={styles.summaryRow}>
@@ -243,6 +280,28 @@ const styles = StyleSheet.create({
   },
   bioText: {
     color: friendsZoneTheme.colors.text,
+    lineHeight: 20,
+  },
+  interestsWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  interestChip: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: friendsZoneTheme.colors.secondarySoft,
+    borderWidth: 1,
+    borderColor: "#F7B3A9",
+  },
+  interestChipText: {
+    color: friendsZoneTheme.colors.secondary,
+    fontWeight: "700",
+    fontSize: 12,
+  },
+  emptyInterestsText: {
+    color: friendsZoneTheme.colors.textMuted,
     lineHeight: 20,
   },
   summaryRow: {

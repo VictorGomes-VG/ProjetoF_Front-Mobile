@@ -74,7 +74,7 @@ export default function Menu() {
     {
       label: "Historico de encontros",
       icon: "time-outline",
-      onPress: () => Alert.alert("Em breve", "Historico completo entra em uma proxima etapa."),
+      onPress: () => router.push("/tabs/locais"),
     },
   ];
 

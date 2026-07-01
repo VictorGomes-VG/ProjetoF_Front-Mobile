@@ -4,6 +4,7 @@ import { type Encontro, type NovoEncontroInput } from "../data/mockEncontros";
 
 type EventApiResponse = {
   id: string;
+  eventCode: string;
   hostUserId: string;
   title: string;
   description: string;
@@ -37,6 +38,7 @@ type UserProfileApiResponse = {
   email: string;
   city: string;
   bio: string;
+  interests: string[];
   plan: "starter" | "plus" | "friend";
   maxEventCapacity: number;
 };
@@ -62,6 +64,7 @@ export type UserProfile = {
   email: string;
   city: string;
   bio: string;
+  interests: string[];
   plan: "starter" | "plus" | "friend";
   maxEventCapacity: number;
 };
@@ -72,7 +75,7 @@ export type AuthPayload = {
   user: UserProfile;
 };
 
-const API_PORT = 5065;
+const API_PORT = 5085;
 let accessToken: string | null = null;
 
 function resolveBaseUrl() {
@@ -97,6 +100,7 @@ function resolveBaseUrl() {
 function normalizeEncontro(item: EventApiResponse): Encontro {
   return {
     id: item.id,
+    codigo: item.eventCode,
     hostUserId: item.hostUserId,
     titulo: item.title,
     descricao: item.description,
@@ -148,6 +152,7 @@ function normalizeUser(item: UserProfileApiResponse): UserProfile {
     email: item.email,
     city: item.city,
     bio: item.bio,
+    interests: item.interests,
     plan: item.plan,
     maxEventCapacity: item.maxEventCapacity,
   };
@@ -277,6 +282,7 @@ export async function registerUser(input: {
   password: string;
   city: string;
   bio: string;
+  interests: string[];
 }) {
   const response = await requestJson<AuthTokenApiResponse>("/api/auth/register", {
     method: "POST",

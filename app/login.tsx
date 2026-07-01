@@ -13,6 +13,7 @@ import {
 import { Redirect, router } from "expo-router";
 import { login, register, useAuthSession } from "./data/authStore";
 import { hydrateEncontros, resetEncontrosState } from "./data/encontrosStore";
+import { interestsCatalog } from "./data/interestsCatalog";
 import { friendsZoneTheme } from "./theme";
 
 const demoCredentials = {
@@ -26,6 +27,7 @@ export default function Login() {
   const [fullName, setFullName] = useState("Victor");
   const [city, setCity] = useState("Sao Paulo");
   const [bio, setBio] = useState("Buscando novas amizades, roles leves e conversas boas.");
+  const [interests, setInterests] = useState<string[]>(["Cafe", "Networking", "Cinema"]);
   const [email, setEmail] = useState(demoCredentials.email);
   const [password, setPassword] = useState(demoCredentials.password);
 
@@ -52,6 +54,11 @@ export default function Login() {
       return;
     }
 
+    if (isRegisterMode && interests.length === 0) {
+      Alert.alert("Interesses", "Selecione pelo menos um interesse para montar seu perfil.");
+      return;
+    }
+
     try {
       if (isRegisterMode) {
         await register({
@@ -60,6 +67,7 @@ export default function Login() {
           password: password.trim(),
           city: city.trim(),
           bio: bio.trim(),
+          interests,
         });
       } else {
         await login(email.trim(), password.trim());
@@ -121,6 +129,28 @@ export default function Login() {
               placeholder="Conte um pouco sobre voce"
               multiline
             />
+
+            <Text style={styles.label}>Interesses</Text>
+            <View style={styles.interestsWrap}>
+              {interestsCatalog.map((interest) => {
+                const selected = interests.includes(interest);
+                return (
+                  <Pressable
+                    key={interest}
+                    style={[styles.interestChip, selected && styles.interestChipActive]}
+                    onPress={() =>
+                      setInterests((current) =>
+                        current.includes(interest)
+                          ? current.filter((item) => item !== interest)
+                          : [...current, interest]
+                      )
+                    }
+                  >
+                    <Text style={[styles.interestChipText, selected && styles.interestChipTextActive]}>{interest}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </>
         )}
 
@@ -247,6 +277,32 @@ const styles = StyleSheet.create({
     minHeight: 88,
     textAlignVertical: "top",
     paddingTop: 12,
+  },
+  interestsWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 4,
+  },
+  interestChip: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: friendsZoneTheme.colors.border,
+    backgroundColor: friendsZoneTheme.colors.surfaceAlt,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  interestChipActive: {
+    backgroundColor: friendsZoneTheme.colors.secondary,
+    borderColor: friendsZoneTheme.colors.secondary,
+  },
+  interestChipText: {
+    color: friendsZoneTheme.colors.text,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  interestChipTextActive: {
+    color: "#FFFFFF",
   },
   errorText: {
     color: friendsZoneTheme.colors.danger,

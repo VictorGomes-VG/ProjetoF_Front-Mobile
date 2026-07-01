@@ -4,6 +4,7 @@ export type EncontroPreco = "gratis" | "pago";
 
 export type Encontro = {
   id: string;
+  codigo?: string;
   titulo: string;
   descricao: string;
   tipo: EncontroTipo;

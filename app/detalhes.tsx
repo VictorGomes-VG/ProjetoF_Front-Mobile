@@ -117,6 +117,12 @@ export default function Detalhes() {
 
           <Text style={styles.title}>{encontro.titulo}</Text>
           <Text style={styles.subtitle}>{`Friend: ${encontro.anfitriao}`}</Text>
+          {encontro.codigo ? (
+            <View style={styles.codeChip}>
+              <Ionicons name="qr-code-outline" size={14} color={friendsZoneTheme.colors.primary} />
+              <Text style={styles.codeChipText}>{`Codigo do encontro: ${encontro.codigo}`}</Text>
+            </View>
+          ) : null}
           <View style={styles.ratingRow}>
             <AvaliacaoInfo nota={encontro.nota} totalAvaliacoes={encontro.totalAvaliacoes} />
             {medalha && (
@@ -269,6 +275,22 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 14,
     color: friendsZoneTheme.colors.textMuted,
+  },
+  codeChip: {
+    marginTop: 10,
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 999,
+    backgroundColor: friendsZoneTheme.colors.primarySoft,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  codeChipText: {
+    color: friendsZoneTheme.colors.primary,
+    fontWeight: "700",
+    fontSize: 12,
   },
   ratingRow: {
     marginTop: 8,

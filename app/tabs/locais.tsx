@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
@@ -8,6 +8,7 @@ import { fetchMyEvents } from "../services/friendZoneApi";
 import { type Encontro, type EncontroTipo } from "../data/mockEncontros";
 import FloatingCreateButton from "../components/FloatingCreateButton";
 import { friendsZoneTheme } from "../theme";
+import { getEventDateTime, getEventTimelineBucket } from "../utils/eventTimeline";
 
 const imageByTipo: Record<EncontroTipo, string> = {
   esporte: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=900&q=80",
@@ -119,11 +120,18 @@ export default function MeusEncontros() {
     }, [])
   );
 
+  const agenda = meusEncontros
+    .filter((item) => getEventTimelineBucket(item) === "upcoming")
+    .sort((left, right) => getEventDateTime(left).getTime() - getEventDateTime(right).getTime());
+  const historico = meusEncontros
+    .filter((item) => getEventTimelineBucket(item) === "past")
+    .sort((left, right) => getEventDateTime(right).getTime() - getEventDateTime(left).getTime());
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.heading}>Meus encontros</Text>
-        <Text style={styles.subheading}>Acompanhe os encontros que voce criou e os que entrou</Text>
+        <Text style={styles.heading}>Agenda e historico</Text>
+        <Text style={styles.subheading}>Acompanhe o que esta chegando e relembre encontros que ja aconteceram</Text>
       </View>
 
       <View style={styles.summary}>
@@ -132,12 +140,12 @@ export default function MeusEncontros() {
           <Text style={styles.summaryLabel}>Total</Text>
         </View>
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryValue}>{meusEncontros.filter((e) => e.status === "Criado por voce").length}</Text>
-          <Text style={styles.summaryLabel}>Criados</Text>
+          <Text style={styles.summaryValue}>{agenda.length}</Text>
+          <Text style={styles.summaryLabel}>Agenda</Text>
         </View>
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryValue}>{meusEncontros.filter((e) => e.status === "Confirmado").length}</Text>
-          <Text style={styles.summaryLabel}>Participando</Text>
+          <Text style={styles.summaryValue}>{historico.length}</Text>
+          <Text style={styles.summaryLabel}>Historico</Text>
         </View>
       </View>
 
@@ -157,13 +165,33 @@ export default function MeusEncontros() {
           <Text style={styles.feedbackText}>Crie seu primeiro encontro ou participe de algum que combine com voce.</Text>
         </View>
       ) : (
-        <FlatList
-          data={meusEncontros}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => <CardMeuEncontro item={item} />}
-          showsVerticalScrollIndicator={false}
-        />
+        <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.sectionBlock}>
+            <Text style={styles.sectionTitle}>Na sua agenda</Text>
+            <Text style={styles.sectionSubtitle}>Encontros confirmados ou criados que ainda vao acontecer.</Text>
+            {agenda.length > 0 ? (
+              agenda.map((item) => <CardMeuEncontro key={item.id} item={item} />)
+            ) : (
+              <View style={styles.emptySectionCard}>
+                <Text style={styles.emptySectionTitle}>Agenda vazia</Text>
+                <Text style={styles.emptySectionText}>Quando voce entrar em um encontro futuro, ele aparece aqui.</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.sectionBlock}>
+            <Text style={styles.sectionTitle}>Historico</Text>
+            <Text style={styles.sectionSubtitle}>Encontros passados para voce acompanhar sua jornada social.</Text>
+            {historico.length > 0 ? (
+              historico.map((item) => <CardMeuEncontro key={item.id} item={item} />)
+            ) : (
+              <View style={styles.emptySectionCard}>
+                <Text style={styles.emptySectionTitle}>Sem historico ainda</Text>
+                <Text style={styles.emptySectionText}>Depois dos seus primeiros encontros concluídos, eles aparecem aqui.</Text>
+              </View>
+            )}
+          </View>
+        </ScrollView>
       )}
       <FloatingCreateButton />
     </SafeAreaView>
@@ -218,6 +246,20 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 98,
     gap: 12,
+  },
+  sectionBlock: {
+    gap: 10,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: friendsZoneTheme.colors.text,
+  },
+  sectionSubtitle: {
+    color: friendsZoneTheme.colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: -4,
   },
   card: {
     backgroundColor: friendsZoneTheme.colors.surface,
@@ -296,6 +338,23 @@ const styles = StyleSheet.create({
   },
   vagaWarn: {
     color: "#B42318",
+  },
+  emptySectionCard: {
+    borderRadius: 18,
+    padding: 14,
+    backgroundColor: friendsZoneTheme.colors.surface,
+    borderWidth: 1,
+    borderColor: friendsZoneTheme.colors.border,
+    gap: 4,
+  },
+  emptySectionTitle: {
+    color: friendsZoneTheme.colors.text,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  emptySectionText: {
+    color: friendsZoneTheme.colors.textMuted,
+    lineHeight: 19,
   },
   feedbackContainer: {
     flex: 1,
