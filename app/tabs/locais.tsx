@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { fetchMyEvents } from "../services/friendZoneApi";
 import { type Encontro, type EncontroTipo } from "../data/mockEncontros";
 import FloatingCreateButton from "../components/FloatingCreateButton";
+import ScalePressable from "../components/ScalePressable";
 import { friendsZoneTheme } from "../theme";
 import { getEventDateTime, getEventTimelineBucket } from "../utils/eventTimeline";
 
@@ -25,7 +26,7 @@ type MeuEncontro = Encontro & {
 function CardMeuEncontro({ item }: { item: MeuEncontro }) {
   const vagasRestantes = item.capacidade - item.participantes;
   return (
-    <Pressable
+    <ScalePressable
       style={styles.card}
       onPress={() =>
         router.push({
@@ -38,6 +39,7 @@ function CardMeuEncontro({ item }: { item: MeuEncontro }) {
           },
         })
       }
+      pressedScale={0.985}
     >
       <Image source={{ uri: imageByTipo[item.tipo] }} style={styles.cardImage} />
       <View style={styles.cardBody}>
@@ -73,7 +75,7 @@ function CardMeuEncontro({ item }: { item: MeuEncontro }) {
           </Text>
         </View>
       </View>
-    </Pressable>
+    </ScalePressable>
   );
 }
 
@@ -131,7 +133,7 @@ export default function MeusEncontros() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.heading}>Agenda e historico</Text>
-        <Text style={styles.subheading}>Acompanhe o que esta chegando e relembre encontros que ja aconteceram</Text>
+        <Text style={styles.subheading}>Sua area de acompanhamento: o que esta confirmado, criado e o que ja rolou.</Text>
       </View>
 
       <View style={styles.summary}>
@@ -187,7 +189,7 @@ export default function MeusEncontros() {
             ) : (
               <View style={styles.emptySectionCard}>
                 <Text style={styles.emptySectionTitle}>Sem historico ainda</Text>
-                <Text style={styles.emptySectionText}>Depois dos seus primeiros encontros concluídos, eles aparecem aqui.</Text>
+                <Text style={styles.emptySectionText}>Depois dos seus primeiros encontros concluidos, eles aparecem aqui.</Text>
               </View>
             )}
           </View>

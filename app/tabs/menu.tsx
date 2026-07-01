@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { availableThemes, friendsZoneTheme, setThemePreference, useThemeSettings } from "../theme";
+import ScalePressable from "../components/ScalePressable";
 
 type MenuItem = {
   label: string;
@@ -13,13 +14,13 @@ type MenuItem = {
 
 function SectionRow({ item }: { item: MenuItem }) {
   return (
-    <Pressable style={styles.rowButton} onPress={item.onPress}>
+    <ScalePressable style={styles.rowButton} onPress={item.onPress} pressedScale={0.99}>
       <View style={styles.rowLeft}>
         <Ionicons name={item.icon} size={24} color={friendsZoneTheme.colors.text} />
         <Text style={styles.rowLabel}>{item.label}</Text>
       </View>
       <Ionicons name="chevron-forward" size={24} color={friendsZoneTheme.colors.text} />
-    </Pressable>
+    </ScalePressable>
   );
 }
 
@@ -47,9 +48,9 @@ export default function Menu() {
 
   const discoverItems: MenuItem[] = [
     {
-      label: "Recomendacoes",
-      icon: "thumbs-up-outline",
-      onPress: () => router.push("/tabs"),
+      label: "Explorar no mapa",
+      icon: "map-outline",
+      onPress: () => router.push("/tabs/buscar"),
     },
     {
       label: "Favoritos",
@@ -57,7 +58,7 @@ export default function Menu() {
       onPress: () => Alert.alert("Em breve", "Favoritos entra no proximo incremento."),
     },
     {
-      label: "Visitas",
+      label: "Meus encontros",
       icon: "calendar-clear-outline",
       onPress: () => router.push("/tabs/locais"),
     },
@@ -99,6 +100,11 @@ export default function Menu() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.heroCard}>
+          <Text style={styles.heroTitle}>Central do app</Text>
+          <Text style={styles.heroText}>Use o mapa para descobrir encontros, a lista para comparar opcoes e Meus encontros para acompanhar sua agenda.</Text>
+        </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Busca e encontros</Text>
           {discoverItems.map((item) => (
@@ -159,6 +165,24 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 120,
     gap: 28,
+  },
+  heroCard: {
+    borderRadius: 20,
+    backgroundColor: friendsZoneTheme.colors.surface,
+    borderWidth: 1,
+    borderColor: friendsZoneTheme.colors.border,
+    padding: 16,
+    gap: 6,
+  },
+  heroTitle: {
+    color: friendsZoneTheme.colors.text,
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  heroText: {
+    color: friendsZoneTheme.colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
   },
   section: {
     gap: 4,

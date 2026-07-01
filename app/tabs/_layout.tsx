@@ -5,6 +5,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuthSession } from "../data/authStore";
 import { friendsZoneTheme } from "../theme";
 
+export const unstable_settings = {
+  initialRouteName: "buscar",
+};
+
 function TabIcon({
   focused,
   color,
@@ -58,6 +62,7 @@ export default function Layout() {
 
   return (
     <Tabs
+      initialRouteName="buscar"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: friendsZoneTheme.colors.secondary,
@@ -87,18 +92,9 @@ export default function Layout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Inicio",
+          title: "Lista",
           tabBarIcon: ({ color, size, focused }) => (
-            <TabIcon focused={focused} color={color} size={size} activeName="home" inactiveName="home-outline" />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="buscar"
-        options={{
-          title: "Buscar",
-          tabBarIcon: ({ color, size, focused }) => (
-            <TabIcon focused={focused} color={color} size={size} activeName="search" inactiveName="search-outline" />
+            <TabIcon focused={focused} color={color} size={size} activeName="reorder-four" inactiveName="reorder-four-outline" />
           ),
         }}
       />
@@ -112,17 +108,11 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
-        name="mensagens"
+        name="buscar"
         options={{
-          title: "Mensagens",
+          title: "Mapa",
           tabBarIcon: ({ color, size, focused }) => (
-            <TabIcon
-              focused={focused}
-              color={color}
-              size={size}
-              activeName="chatbubble-ellipses"
-              inactiveName="chatbubble-ellipses-outline"
-            />
+            <TabIcon focused={focused} color={color} size={size} activeName="map" inactiveName="map-outline" />
           ),
         }}
       />

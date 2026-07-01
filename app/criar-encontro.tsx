@@ -19,7 +19,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-import MapView, { Marker, type MapPressEvent } from "react-native-maps";
+import MapView from "react-native-maps";
 import { useAuthSession } from "./data/authStore";
 import ScalePressable from "./components/ScalePressable";
 import { addEncontro } from "./data/encontrosStore";
@@ -248,6 +248,15 @@ function formatPlacePreview(place: SearchPlaceResult) {
   return {
     title: road || place.display_name.split(",").slice(0, 2).join(", "),
     subtitle: region || place.display_name,
+  };
+}
+
+function buildMapRegion(latitude: number, longitude: number, zoom = 0.01) {
+  return {
+    latitude,
+    longitude,
+    latitudeDelta: zoom,
+    longitudeDelta: zoom,
   };
 }
 
@@ -498,7 +507,7 @@ export default function CriarEncontro() {
   function openMapPicker() {
     const baseCoordinate = selectedCoordinate ?? userLocation ?? DEFAULT_COORDINATE;
     setDraftCoordinate(baseCoordinate);
-    setDraftAddress(endereco || "Procure um endereco ou mova o pin no mapa.");
+    setDraftAddress(endereco || "Procure um endereco ou mova o mapa por baixo do pin.");
     setDraftSearchQuery(endereco || "");
     setSearchResults([]);
     setLocalSearchError(null);
@@ -509,22 +518,13 @@ export default function CriarEncontro() {
     await refreshLocation();
     const current = userLocation ?? selectedCoordinate ?? DEFAULT_COORDINATE;
     setDraftCoordinate(current);
-    mapRef.current?.animateToRegion({
-      latitude: current.latitude,
-      longitude: current.longitude,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    });
+    mapRef.current?.animateToRegion(buildMapRegion(current.latitude, current.longitude));
   }
 
   async function confirmMapSelection() {
     setSelectedCoordinate(draftCoordinate);
     setMapaAberto(false);
     await applyCoordinateDetails(draftCoordinate.latitude, draftCoordinate.longitude);
-  }
-
-  function handleMapPress(event: MapPressEvent) {
-    setDraftCoordinate(event.nativeEvent.coordinate);
   }
 
   function handleSelectSearchResult(result: SearchPlaceResult) {
@@ -538,12 +538,7 @@ export default function CriarEncontro() {
     setDraftSearchQuery(result.display_name);
     setSearchResults([]);
     setLocalSearchError(null);
-    mapRef.current?.animateToRegion({
-      latitude,
-      longitude,
-      latitudeDelta: 0.008,
-      longitudeDelta: 0.008,
-    });
+    mapRef.current?.animateToRegion(buildMapRegion(latitude, longitude, 0.008));
   }
 
   function getFieldState(field: FieldKey) {
@@ -929,69 +924,6 @@ export default function CriarEncontro() {
 
       <Modal visible={mapaAberto} animationType="slide" onRequestClose={() => setMapaAberto(false)}>
         <SafeAreaView style={styles.mapModalContainer}>
-          <View style={styles.mapModalHeader}>
-            <ScalePressable style={styles.backButton} onPress={() => setMapaAberto(false)} pressedScale={0.94}>
-              <Ionicons name="arrow-back" size={18} color={colors.text} />
-            </ScalePressable>
-            <View style={styles.mapModalHeaderText}>
-              <Text style={styles.title}>Escolher local do encontro</Text>
-              <Text style={styles.mapModalSubtitle}>Digite o endereco, selecione o resultado e ajuste o pin se quiser.</Text>
-            </View>
-          </View>
-
-          <View style={styles.searchPanel}>
-            <View style={styles.searchInputWrap}>
-              <Ionicons name="search" size={16} color={colors.textSoft} />
-              <TextInput
-                value={draftSearchQuery}
-                onChangeText={setDraftSearchQuery}
-                style={styles.searchInput}
-                placeholder="Ex: Rua dos Pinheiros 220, Sao Paulo"
-                placeholderTextColor={colors.textSoft}
-              />
-              {draftSearchQuery.trim().length > 0 ? (
-                <ScalePressable onPress={() => setDraftSearchQuery("")} pressedScale={0.9}>
-                  <Ionicons name="close-circle" size={18} color={colors.textSoft} />
-                </ScalePressable>
-              ) : null}
-            </View>
-            <View style={styles.searchHintRow}>
-              <Ionicons name="sparkles-outline" size={14} color={colors.secondary} />
-              <Text style={styles.searchHintText}>Digite rua, numero e cidade para resultados mais precisos.</Text>
-            </View>
-
-            {buscandoLocais ? (
-              <View style={styles.searchFeedbackRow}>
-                <ActivityIndicator size="small" color={colors.secondary} />
-                <Text style={styles.searchFeedbackText}>Buscando enderecos...</Text>
-              </View>
-            ) : null}
-
-            {localSearchError ? <Text style={styles.errorText}>{localSearchError}</Text> : null}
-
-            {searchResults.length > 0 ? (
-              <ScrollView style={styles.searchResultsList} nestedScrollEnabled keyboardShouldPersistTaps="handled">
-                {searchResults.map((result) => {
-                  const preview = formatPlacePreview(result);
-                  return (
-                    <ScalePressable
-                      key={result.place_id}
-                      style={styles.searchResultItem}
-                      onPress={() => handleSelectSearchResult(result)}
-                      pressedScale={0.985}
-                    >
-                      <Ionicons name="location-outline" size={18} color={colors.secondary} />
-                      <View style={styles.searchResultCopy}>
-                        <Text style={styles.searchResultTitle}>{preview.title}</Text>
-                        <Text style={styles.searchResultSubtitle}>{preview.subtitle}</Text>
-                      </View>
-                    </ScalePressable>
-                  );
-                })}
-              </ScrollView>
-            ) : null}
-          </View>
-
           <MapView
             ref={mapRef}
             style={styles.map}
@@ -1001,11 +933,94 @@ export default function CriarEncontro() {
               latitudeDelta: 0.02,
               longitudeDelta: 0.02,
             }}
-            onPress={handleMapPress}
-            onLongPress={handleMapPress}
-          >
-            <Marker coordinate={draftCoordinate} draggable onDragEnd={(event) => setDraftCoordinate(event.nativeEvent.coordinate)} />
-          </MapView>
+            onRegionChangeComplete={(region) =>
+              setDraftCoordinate({
+                latitude: region.latitude,
+                longitude: region.longitude,
+              })
+            }
+          />
+
+          <View pointerEvents="box-none" style={styles.mapOverlay}>
+            <View style={styles.mapTopChrome}>
+              <View style={styles.mapModalHeader}>
+                <ScalePressable style={styles.backButton} onPress={() => setMapaAberto(false)} pressedScale={0.94}>
+                  <Ionicons name="arrow-back" size={18} color={colors.text} />
+                </ScalePressable>
+                <View style={styles.mapModalHeaderText}>
+                  <Text style={styles.title}>Escolher local do encontro</Text>
+                  <Text style={styles.mapModalSubtitle}>Busque como no Uber e mova o mapa por baixo do pin central.</Text>
+                </View>
+              </View>
+
+              <View style={styles.searchPanel}>
+                <View style={styles.searchInputWrap}>
+                  <Ionicons name="search" size={16} color={colors.textSoft} />
+                  <TextInput
+                    value={draftSearchQuery}
+                    onChangeText={setDraftSearchQuery}
+                    style={styles.searchInput}
+                    placeholder="Ex: Rua dos Pinheiros 220, Sao Paulo"
+                    placeholderTextColor={colors.textSoft}
+                  />
+                  {draftSearchQuery.trim().length > 0 ? (
+                    <ScalePressable onPress={() => setDraftSearchQuery("")} pressedScale={0.9}>
+                      <Ionicons name="close-circle" size={18} color={colors.textSoft} />
+                    </ScalePressable>
+                  ) : null}
+                </View>
+                <View style={styles.searchHintRow}>
+                  <Ionicons name="sparkles-outline" size={14} color={colors.secondary} />
+                  <Text style={styles.searchHintText}>Digite rua, numero e cidade para resultados mais precisos.</Text>
+                </View>
+
+                {buscandoLocais ? (
+                  <View style={styles.searchFeedbackRow}>
+                    <ActivityIndicator size="small" color={colors.secondary} />
+                    <Text style={styles.searchFeedbackText}>Buscando enderecos...</Text>
+                  </View>
+                ) : null}
+
+                {localSearchError ? <Text style={styles.errorText}>{localSearchError}</Text> : null}
+
+                {searchResults.length > 0 ? (
+                  <ScrollView style={styles.searchResultsList} nestedScrollEnabled keyboardShouldPersistTaps="handled">
+                    {searchResults.map((result) => {
+                      const preview = formatPlacePreview(result);
+                      return (
+                        <ScalePressable
+                          key={result.place_id}
+                          style={styles.searchResultItem}
+                          onPress={() => handleSelectSearchResult(result)}
+                          pressedScale={0.985}
+                        >
+                          <Ionicons name="location-outline" size={18} color={colors.secondary} />
+                          <View style={styles.searchResultCopy}>
+                            <Text style={styles.searchResultTitle}>{preview.title}</Text>
+                            <Text style={styles.searchResultSubtitle}>{preview.subtitle}</Text>
+                          </View>
+                        </ScalePressable>
+                      );
+                    })}
+                  </ScrollView>
+                ) : null}
+              </View>
+            </View>
+
+            <View pointerEvents="none" style={styles.centerPinWrap}>
+              <View style={styles.centerPinShadow} />
+              <View style={styles.centerPinStem} />
+              <View style={styles.centerPinHead}>
+                <Ionicons name="location" size={22} color={colors.white} />
+              </View>
+            </View>
+
+            <View style={styles.mapFloatingActions}>
+              <ScalePressable style={styles.locateFloatingButton} onPress={() => void pickCurrentLocation()} pressedScale={0.94}>
+                <Ionicons name="locate-outline" size={18} color={colors.text} />
+              </ScalePressable>
+            </View>
+          </View>
 
           <View style={styles.mapSheet}>
             <View style={styles.mapSheetHandle} />
@@ -1025,14 +1040,14 @@ export default function CriarEncontro() {
               </Text>
             </View>
             <Text style={styles.mapSheetHint}>
-              Se o resultado estiver perto, confirme. Se quiser mais precisao, arraste o pin antes de salvar o local.
+              Se estiver perto, confirme. Para ajustar, continue movendo o mapa ate o pin ficar exatamente no ponto desejado.
             </Text>
             <View style={styles.mapSheetActions}>
-              <ScalePressable style={styles.secondaryActionButton} onPress={() => void pickCurrentLocation()} pressedScale={0.97}>
-                <Text style={styles.secondaryActionButtonText}>Usar minha localizacao</Text>
-              </ScalePressable>
               <ScalePressable style={styles.primaryActionButton} onPress={() => void confirmMapSelection()} pressedScale={0.97}>
                 <Text style={styles.primaryActionButtonText}>Confirmar local</Text>
+              </ScalePressable>
+              <ScalePressable style={styles.secondaryActionButton} onPress={() => void pickCurrentLocation()} pressedScale={0.97}>
+                <Text style={styles.secondaryActionButtonText}>Minha localizacao</Text>
               </ScalePressable>
             </View>
           </View>
@@ -1566,13 +1581,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  mapOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "space-between",
+  },
+  mapTopChrome: {
+    paddingTop: 8,
+    gap: 10,
+  },
   mapModalHeader: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
     paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 10,
+    paddingBottom: 2,
   },
   mapModalHeaderText: {
     flex: 1,
@@ -1584,19 +1606,19 @@ const styles = StyleSheet.create({
   },
   searchPanel: {
     paddingHorizontal: 16,
-    paddingBottom: 10,
     gap: 8,
   },
   searchInputWrap: {
     minHeight: 48,
-    borderRadius: 14,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.surface,
+    backgroundColor: "rgba(255,255,255,0.98)",
     paddingHorizontal: 12,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    ...shadows.card,
   },
   searchInput: {
     flex: 1,
@@ -1627,10 +1649,11 @@ const styles = StyleSheet.create({
   searchResultsList: {
     maxHeight: 220,
     borderRadius: 16,
-    backgroundColor: colors.surface,
+    backgroundColor: "rgba(255,255,255,0.98)",
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: 12,
+    ...shadows.card,
   },
   searchResultItem: {
     flexDirection: "row",
@@ -1657,14 +1680,69 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
+  centerPinWrap: {
+    position: "absolute",
+    top: "47%",
+    left: "50%",
+    marginLeft: -20,
+    marginTop: -50,
+    width: 40,
+    alignItems: "center",
+  },
+  centerPinShadow: {
+    position: "absolute",
+    bottom: 2,
+    width: 22,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: "rgba(15,23,42,0.18)",
+  },
+  centerPinStem: {
+    width: 4,
+    height: 14,
+    borderRadius: 999,
+    backgroundColor: colors.secondary,
+    marginTop: 28,
+  },
+  centerPinHead: {
+    position: "absolute",
+    top: 0,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.secondary,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 3,
+    borderColor: colors.white,
+    ...shadows.card,
+  },
+  mapFloatingActions: {
+    position: "absolute",
+    right: 16,
+    bottom: 194,
+    gap: 10,
+  },
+  locateFloatingButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.98)",
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.card,
+  },
   mapSheet: {
     backgroundColor: colors.surface,
     padding: 16,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    gap: 8,
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
+    gap: 10,
     borderTopWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   mapSheetHandle: {
     alignSelf: "center",
@@ -1682,7 +1760,7 @@ const styles = StyleSheet.create({
   mapSheetAddress: {
     color: colors.text,
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 21,
     fontWeight: "600",
   },
   mapAddressLoadingRow: {
@@ -1717,12 +1795,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   mapSheetActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
     marginTop: 4,
   },
   secondaryActionButton: {
-    flex: 1,
+    flex: 0.95,
     minHeight: 46,
     borderRadius: 14,
     borderWidth: 1,
@@ -1737,7 +1815,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   primaryActionButton: {
-    flex: 1.2,
+    flex: 1.3,
     minHeight: 46,
     borderRadius: 14,
     alignItems: "center",

@@ -301,8 +301,8 @@ export default function Home() {
       <Animated.View style={[styles.header, headerAnimation]}>
         <View style={styles.headerCopy}>
           <Text style={styles.eyebrow}>FriendsZone</Text>
-          <Text style={styles.heading}>Friends Zones</Text>
-          <Text style={styles.subheading}>Todos os encontros da comunidade</Text>
+          <Text style={styles.heading}>Lista dos encontros</Text>
+          <Text style={styles.subheading}>A mesma descoberta do mapa, agora em formato de lista para comparar melhor.</Text>
           <Text style={styles.locationHint}>
             {locationLoading
               ? "Obtendo sua localizacao..."

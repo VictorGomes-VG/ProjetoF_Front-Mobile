@@ -268,8 +268,8 @@ export default function Buscar() {
         <View style={styles.topPanel}>
           <View style={styles.headerRow}>
             <View>
-              <Text style={styles.headerTitle}>Encontros perto de voce</Text>
-              <Text style={styles.headerSubtitle}>{`${encontrosFiltrados.length} opcoes encontradas`}</Text>
+              <Text style={styles.headerTitle}>Descubra no mapa</Text>
+              <Text style={styles.headerSubtitle}>{`${encontrosFiltrados.length} encontros visiveis perto de voce`}</Text>
             </View>
             <Pressable onPress={() => setModalFiltroAberto(true)} style={styles.filterToggleButton}>
               <Ionicons name="options-outline" size={16} color="#0F172A" />
@@ -287,11 +287,12 @@ export default function Buscar() {
             <TextInput
               value={busca}
               onChangeText={setBusca}
-              placeholder="Buscar por titulo, bairro ou cidade"
+              placeholder="Busque por titulo, bairro ou cidade"
               placeholderTextColor="#94A3B8"
               style={styles.searchInput}
             />
           </View>
+          <Text style={styles.mapHint}>Toque em um pin para abrir o resumo rapido e entrar nos detalhes.</Text>
         </View>
       </SafeAreaView>
       <Modal visible={!!selecionado} transparent animationType="fade" onRequestClose={() => setSelecionado(null)}>
@@ -610,6 +611,13 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     color: friendsZoneTheme.colors.text,
+  },
+  mapHint: {
+    marginTop: -2,
+    color: friendsZoneTheme.colors.textSoft,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "600",
   },
   row: {
     gap: 8,
