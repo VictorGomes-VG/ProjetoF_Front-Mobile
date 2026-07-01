@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -13,7 +13,9 @@ import {
 import { Redirect, router } from "expo-router";
 import { login, register, useAuthSession } from "./data/authStore";
 import { hydrateEncontros, resetEncontrosState } from "./data/encontrosStore";
+import ScalePressable from "./components/ScalePressable";
 import { interestsCatalog } from "./data/interestsCatalog";
+import { useEntranceAnimation } from "./hooks/useEntranceAnimation";
 import { friendsZoneTheme } from "./theme";
 
 const demoCredentials = {
@@ -23,6 +25,8 @@ const demoCredentials = {
 
 export default function Login() {
   const session = useAuthSession();
+  const heroAnimation = useEntranceAnimation({ delay: 40, distance: 26, scaleFrom: 0.99 });
+  const cardAnimation = useEntranceAnimation({ delay: 150, distance: 34, scaleFrom: 0.97 });
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [fullName, setFullName] = useState("Victor");
   const [city, setCity] = useState("Sao Paulo");
@@ -30,6 +34,17 @@ export default function Login() {
   const [interests, setInterests] = useState<string[]>(["Cafe", "Networking", "Cinema"]);
   const [email, setEmail] = useState(demoCredentials.email);
   const [password, setPassword] = useState(demoCredentials.password);
+
+  const registerBlockAnimation = useEntranceAnimation({ delay: 40, duration: 360, distance: 16, scaleFrom: 0.99 });
+  const registerBlockStyle = useMemo(
+    () => ({
+      opacity: registerBlockAnimation.opacity,
+      transform: registerBlockAnimation.transform,
+      maxHeight: isRegisterMode ? 420 : 0,
+      overflow: "hidden" as const,
+    }),
+    [isRegisterMode, registerBlockAnimation.opacity, registerBlockAnimation.transform]
+  );
 
   if (!session.isInitialized) {
     return (
@@ -89,32 +104,35 @@ export default function Login() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.container}>
-      <View style={styles.hero}>
+      <Animated.View style={heroAnimation}>
         <Text style={styles.kicker}>FriendsZone MVP</Text>
         <Text style={styles.title}>Encontre sua proxima conexao no seu bairro.</Text>
         <Text style={styles.subtitle}>
           Entre com uma conta seedada ou crie sua conta para listar, criar e participar de encontros.
         </Text>
-      </View>
+      </Animated.View>
 
-      <View style={styles.card}>
+      <Animated.View style={[styles.card, cardAnimation]}>
         <View style={styles.toggleRow}>
-          <Pressable
+          <ScalePressable
             style={[styles.toggleButton, !isRegisterMode && styles.toggleButtonActive]}
             onPress={() => setIsRegisterMode(false)}
+            pressedScale={0.98}
           >
             <Text style={[styles.toggleText, !isRegisterMode && styles.toggleTextActive]}>Entrar</Text>
-          </Pressable>
-          <Pressable
+          </ScalePressable>
+          <ScalePressable
             style={[styles.toggleButton, isRegisterMode && styles.toggleButtonActive]}
             onPress={() => setIsRegisterMode(true)}
+            pressedScale={0.98}
           >
             <Text style={[styles.toggleText, isRegisterMode && styles.toggleTextActive]}>Criar conta</Text>
-          </Pressable>
+          </ScalePressable>
         </View>
 
-        {isRegisterMode && (
-          <>
+        <Animated.View style={registerBlockStyle}>
+          {isRegisterMode && (
+            <>
             <Text style={styles.label}>Nome completo</Text>
             <TextInput value={fullName} onChangeText={setFullName} style={styles.input} placeholder="Seu nome" />
 
@@ -135,7 +153,7 @@ export default function Login() {
               {interestsCatalog.map((interest) => {
                 const selected = interests.includes(interest);
                 return (
-                  <Pressable
+                  <ScalePressable
                     key={interest}
                     style={[styles.interestChip, selected && styles.interestChipActive]}
                     onPress={() =>
@@ -145,14 +163,16 @@ export default function Login() {
                           : [...current, interest]
                       )
                     }
+                    pressedScale={0.96}
                   >
                     <Text style={[styles.interestChipText, selected && styles.interestChipTextActive]}>{interest}</Text>
-                  </Pressable>
+                  </ScalePressable>
                 );
               })}
             </View>
-          </>
-        )}
+            </>
+          )}
+        </Animated.View>
 
         <Text style={styles.label}>Email</Text>
         <TextInput
@@ -175,24 +195,25 @@ export default function Login() {
 
         {session.error ? <Text style={styles.errorText}>{session.error}</Text> : null}
 
-        <Pressable
+        <ScalePressable
           style={[styles.primaryButton, session.isLoading && styles.primaryButtonDisabled]}
           onPress={() => void handleSubmit()}
           disabled={session.isLoading}
+          pressedScale={0.97}
         >
           {session.isLoading ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.primaryButtonText}>{isRegisterMode ? "Criar conta" : "Entrar agora"}</Text>
           )}
-        </Pressable>
+        </ScalePressable>
 
-        <Pressable style={styles.secondaryButton} onPress={fillDemoAccount}>
+        <ScalePressable style={styles.secondaryButton} onPress={fillDemoAccount} pressedScale={0.98}>
           <Text style={styles.secondaryButtonText}>Usar conta demo</Text>
-        </Pressable>
+        </ScalePressable>
 
         <Text style={styles.helperText}>Conta pronta para teste: marina@friendszone.app / 123456</Text>
-      </View>
+      </Animated.View>
     </KeyboardAvoidingView>
   );
 }

@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import {
   ActivityIndicator,
+  Animated,
   Alert,
   Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,8 +21,10 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import MapView, { Marker, type MapPressEvent } from "react-native-maps";
 import { useAuthSession } from "./data/authStore";
+import ScalePressable from "./components/ScalePressable";
 import { addEncontro } from "./data/encontrosStore";
 import { useUserLocation } from "./hooks/useUserLocation";
+import { useEntranceAnimation } from "./hooks/useEntranceAnimation";
 import { type EncontroPreco, type EncontroTipo } from "./data/mockEncontros";
 import { friendsZoneTheme } from "./theme";
 
@@ -249,10 +251,31 @@ function formatPlacePreview(place: SearchPlaceResult) {
   };
 }
 
+function buildPendingLabels(errors: Partial<Record<FieldKey, string>>) {
+  const labels: Record<FieldKey, string> = {
+    titulo: "Titulo",
+    descricao: "Descricao",
+    cidade: "Cidade",
+    bairro: "Bairro",
+    endereco: "Endereco",
+    dataHora: "Data e hora",
+    comunidadeTags: "Comunidades",
+    local: "Local no mapa",
+  };
+
+  return (Object.keys(errors) as FieldKey[]).map((field) => labels[field]);
+}
+
 const { colors, shadows } = friendsZoneTheme;
 
 export default function CriarEncontro() {
   const session = useAuthSession();
+  const heroAnimation = useEntranceAnimation({ delay: 40, distance: 24, scaleFrom: 0.99 });
+  const progressAnimation = useEntranceAnimation({ delay: 110, distance: 26, scaleFrom: 0.985 });
+  const sectionOneAnimation = useEntranceAnimation({ delay: 180, distance: 30, scaleFrom: 0.985 });
+  const sectionTwoAnimation = useEntranceAnimation({ delay: 260, distance: 30, scaleFrom: 0.985 });
+  const sectionThreeAnimation = useEntranceAnimation({ delay: 340, distance: 30, scaleFrom: 0.985 });
+  const submitAnimation = useEntranceAnimation({ delay: 420, distance: 30, scaleFrom: 0.985 });
   const { location: userLocation, refreshLocation } = useUserLocation();
   const mapRef = useRef<MapView | null>(null);
 
@@ -298,6 +321,11 @@ export default function CriarEncontro() {
   const data = formatDateValue(dataHora);
   const hora = formatTimeValue(dataHora);
   const requiredPendingCount = Object.keys(fieldErrors).length;
+  const totalChecklistItems = 8;
+  const completionRatio = (totalChecklistItems - requiredPendingCount) / totalChecklistItems;
+  const completionPercent = Math.round(completionRatio * 100);
+  const pendingLabels = buildPendingLabels(fieldErrors).slice(0, 4);
+  const progressWidth = `${Math.max(8, completionPercent)}%` as const;
 
   async function applyCoordinateDetails(latitude: number, longitude: number) {
     setResolvendoEndereco(true);
@@ -582,23 +610,23 @@ export default function CriarEncontro() {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.flex}>
-        <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Animated.View style={[styles.header, heroAnimation]}>
+          <ScalePressable style={styles.backButton} onPress={() => router.back()} pressedScale={0.94}>
             <Ionicons name="arrow-back" size={18} color={colors.text} />
-          </Pressable>
+          </ScalePressable>
           <View style={styles.headerText}>
             <Text style={styles.title}>Criar encontro</Text>
             <Text style={styles.subtitle}>Fluxo rapido, claro e com local facil de escolher.</Text>
           </View>
-        </View>
+        </Animated.View>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.coverCard}>
+          <Animated.View style={[styles.coverCard, heroAnimation]}>
             <Image source={{ uri: coverPreview }} style={styles.coverPreview} />
             <View style={styles.coverOverlay} />
-            <Pressable style={styles.coverEditButton} onPress={() => void pickImageFromGallery()}>
+            <ScalePressable style={styles.coverEditButton} onPress={() => void pickImageFromGallery()} pressedScale={0.94}>
               <Ionicons name="image-outline" size={16} color={colors.text} />
-            </Pressable>
+            </ScalePressable>
             <View style={styles.coverContent}>
               <View style={styles.coverBadge}>
                 <Text style={styles.coverBadgeText}>{labelsTipo[tipo]}</Text>
@@ -607,10 +635,20 @@ export default function CriarEncontro() {
               <Text style={styles.coverMeta}>
                 {[bairro.trim() || "Bairro", data.trim(), hora.trim()].join(" • ")}
               </Text>
+              <View style={styles.coverStatsRow}>
+                <View style={styles.coverStatChip}>
+                  <Ionicons name="people-outline" size={13} color={colors.white} />
+                  <Text style={styles.coverStatText}>{`${maxEventCapacity} vagas`}</Text>
+                </View>
+                <View style={styles.coverStatChip}>
+                  <Ionicons name="location-outline" size={13} color={colors.white} />
+                  <Text style={styles.coverStatText}>{bairro.trim() || "Defina o bairro"}</Text>
+                </View>
+              </View>
             </View>
-          </View>
+          </Animated.View>
 
-          <View style={styles.progressCard}>
+          <Animated.View style={[styles.progressCard, progressAnimation]}>
             <View style={styles.progressIcon}>
               <Ionicons
                 name={requiredPendingCount === 0 ? "checkmark-circle" : "alert-circle-outline"}
@@ -627,10 +665,31 @@ export default function CriarEncontro() {
                   ? "Seu encontro ja esta completo. Revise e publique quando quiser."
                   : "Os campos faltando ficam destacados automaticamente para voce terminar rapido."}
               </Text>
+              <View style={styles.progressBarTrack}>
+                <View style={[styles.progressBarFill, { width: progressWidth }]} />
+              </View>
+              <View style={styles.progressMetaRow}>
+                <Text style={styles.progressMetaText}>{`${completionPercent}% completo`}</Text>
+                <Text style={styles.progressMetaText}>{`${totalChecklistItems - requiredPendingCount}/${totalChecklistItems} itens ok`}</Text>
+              </View>
+              {pendingLabels.length > 0 ? (
+                <View style={styles.pendingChipsRow}>
+                  {pendingLabels.map((label) => (
+                    <View key={label} style={styles.pendingChip}>
+                      <Text style={styles.pendingChipText}>{label}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.successPill}>
+                  <Ionicons name="sparkles-outline" size={14} color={colors.accent} />
+                  <Text style={styles.successPillText}>Briefing completo e pronto para ir ao ar.</Text>
+                </View>
+              )}
             </View>
-          </View>
+          </Animated.View>
 
-          <View style={styles.sectionCard}>
+          <Animated.View style={[styles.sectionCard, sectionOneAnimation]}>
             <Text style={styles.sectionTitle}>Identidade do encontro</Text>
             <Text style={styles.sectionDescription}>Capriche no nome e na descricao. Isso ajuda a atrair a turma certa.</Text>
 
@@ -654,9 +713,9 @@ export default function CriarEncontro() {
               multiline
             />
             {descricaoState.invalid ? <Text style={styles.errorText}>{descricaoState.message}</Text> : null}
-          </View>
+          </Animated.View>
 
-          <View style={styles.sectionCard}>
+          <Animated.View style={[styles.sectionCard, sectionTwoAnimation]}>
             <Text style={styles.sectionTitle}>Local e horario</Text>
             <Text style={styles.sectionDescription}>
               Voce pode digitar o endereco manualmente, mas o melhor fluxo e procurar no mapa e confirmar o pin.
@@ -700,10 +759,20 @@ export default function CriarEncontro() {
                     Abra a busca de endereco, selecione um resultado como no Uber e ajuste o pin se precisar.
                   </Text>
                 </View>
-                <Pressable style={styles.mapButton} onPress={openMapPicker}>
+                <ScalePressable style={styles.mapButton} onPress={openMapPicker} pressedScale={0.97}>
                   <Ionicons name="map-outline" size={16} color={colors.white} />
                   <Text style={styles.mapButtonText}>Selecionar no mapa</Text>
-                </Pressable>
+                </ScalePressable>
+              </View>
+              <View style={styles.locationHighlights}>
+                <View style={styles.locationHighlightCard}>
+                  <Ionicons name="search-outline" size={16} color={colors.secondary} />
+                  <Text style={styles.locationHighlightText}>Busque o endereco digitando como no Uber.</Text>
+                </View>
+                <View style={styles.locationHighlightCard}>
+                  <Ionicons name="pin-outline" size={16} color={colors.secondary} />
+                  <Text style={styles.locationHighlightText}>Depois ajuste o pin para maior precisao.</Text>
+                </View>
               </View>
               {selectedCoordinate ? (
                 <View style={styles.locationSummary}>
@@ -726,23 +795,23 @@ export default function CriarEncontro() {
             <View style={styles.row}>
               <View style={styles.col}>
                 <Text style={styles.label}>Data</Text>
-                <Pressable style={[styles.inputButton, dataHoraState.invalid && styles.inputError]} onPress={() => openPicker("date")}>
+                <ScalePressable style={[styles.inputButton, dataHoraState.invalid && styles.inputError]} onPress={() => openPicker("date")} pressedScale={0.985}>
                   <Ionicons name="calendar-outline" size={16} color={colors.textSoft} />
                   <Text style={styles.inputButtonText}>{data}</Text>
-                </Pressable>
+                </ScalePressable>
               </View>
               <View style={styles.col}>
                 <Text style={styles.label}>Hora</Text>
-                <Pressable style={[styles.inputButton, dataHoraState.invalid && styles.inputError]} onPress={() => openPicker("time")}>
+                <ScalePressable style={[styles.inputButton, dataHoraState.invalid && styles.inputError]} onPress={() => openPicker("time")} pressedScale={0.985}>
                   <Ionicons name="time-outline" size={16} color={colors.textSoft} />
                   <Text style={styles.inputButtonText}>{hora}</Text>
-                </Pressable>
+                </ScalePressable>
               </View>
             </View>
             {dataHoraState.invalid ? <Text style={styles.errorText}>{dataHoraState.message}</Text> : null}
-          </View>
+          </Animated.View>
 
-          <View style={styles.sectionCard}>
+          <Animated.View style={[styles.sectionCard, sectionThreeAnimation]}>
             <Text style={styles.sectionTitle}>Formato e comunidades</Text>
             <Text style={styles.sectionDescription}>Defina o tipo do encontro e marque as comunidades que combinam com ele.</Text>
 
@@ -780,9 +849,9 @@ export default function CriarEncontro() {
             <Text style={styles.label}>Tipo</Text>
             <View style={styles.chipsRow}>
               {tipos.map((item) => (
-                <Pressable key={item} onPress={() => setTipo(item)} style={[styles.chip, tipo === item && styles.chipActive]}>
+                <ScalePressable key={item} onPress={() => setTipo(item)} style={[styles.chip, tipo === item && styles.chipActive]} pressedScale={0.96}>
                   <Text style={[styles.chipText, tipo === item && styles.chipTextActive]}>{labelsTipo[item]}</Text>
-                </Pressable>
+                </ScalePressable>
               ))}
             </View>
 
@@ -791,7 +860,7 @@ export default function CriarEncontro() {
               {comunidadeTagsDisponiveis.map((tag) => {
                 const selected = comunidadeTags.includes(tag);
                 return (
-                  <Pressable
+                  <ScalePressable
                     key={tag}
                     onPress={() =>
                       setComunidadeTags((prev) =>
@@ -799,9 +868,10 @@ export default function CriarEncontro() {
                       )
                     }
                     style={[styles.chip, selected && styles.chipActive, comunidadeState.invalid && styles.chipError]}
+                    pressedScale={0.96}
                   >
                     <Text style={[styles.chipText, selected && styles.chipTextActive]}>{tag}</Text>
-                  </Pressable>
+                  </ScalePressable>
                 );
               })}
             </View>
@@ -810,14 +880,14 @@ export default function CriarEncontro() {
             <Text style={styles.label}>Preco</Text>
             <View style={styles.chipsRow}>
               {precos.map((item) => (
-                <Pressable key={item} onPress={() => setPreco(item)} style={[styles.chip, preco === item && styles.chipActive]}>
+                <ScalePressable key={item} onPress={() => setPreco(item)} style={[styles.chip, preco === item && styles.chipActive]} pressedScale={0.96}>
                   <Text style={[styles.chipText, preco === item && styles.chipTextActive]}>{labelsPreco[item]}</Text>
-                </Pressable>
+                </ScalePressable>
               ))}
             </View>
-          </View>
+          </Animated.View>
 
-          <View style={styles.submitCard}>
+          <Animated.View style={[styles.submitCard, submitAnimation]}>
             <View style={styles.submitSummary}>
               <Text style={styles.submitSummaryTitle}>Pronto para publicar?</Text>
               <Text style={styles.submitSummaryText}>
@@ -825,15 +895,26 @@ export default function CriarEncontro() {
                   ? "Seu encontro esta redondo. Agora e so publicar."
                   : "Se faltar algo, eu vou te mostrar exatamente onde ajustar antes de publicar."}
               </Text>
+              <View style={styles.submitStatusRow}>
+                <Ionicons
+                  name={isFormValid ? "checkmark-circle" : "flash-outline"}
+                  size={15}
+                  color={isFormValid ? colors.accent : colors.white}
+                />
+                <Text style={styles.submitStatusText}>
+                  {isFormValid ? "Fluxo validado com sucesso." : "Revise os destaques em vermelho antes de publicar."}
+                </Text>
+              </View>
             </View>
-            <Pressable
+            <ScalePressable
               style={[styles.saveButton, salvando && styles.saveButtonDisabled]}
               onPress={() => void salvarEncontro()}
               disabled={salvando}
+              pressedScale={0.97}
             >
               <Text style={styles.saveButtonText}>{salvando ? "Publicando..." : "Publicar encontro"}</Text>
-            </Pressable>
-          </View>
+            </ScalePressable>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -849,9 +930,9 @@ export default function CriarEncontro() {
       <Modal visible={mapaAberto} animationType="slide" onRequestClose={() => setMapaAberto(false)}>
         <SafeAreaView style={styles.mapModalContainer}>
           <View style={styles.mapModalHeader}>
-            <Pressable style={styles.backButton} onPress={() => setMapaAberto(false)}>
+            <ScalePressable style={styles.backButton} onPress={() => setMapaAberto(false)} pressedScale={0.94}>
               <Ionicons name="arrow-back" size={18} color={colors.text} />
-            </Pressable>
+            </ScalePressable>
             <View style={styles.mapModalHeaderText}>
               <Text style={styles.title}>Escolher local do encontro</Text>
               <Text style={styles.mapModalSubtitle}>Digite o endereco, selecione o resultado e ajuste o pin se quiser.</Text>
@@ -869,10 +950,14 @@ export default function CriarEncontro() {
                 placeholderTextColor={colors.textSoft}
               />
               {draftSearchQuery.trim().length > 0 ? (
-                <Pressable onPress={() => setDraftSearchQuery("")}>
+                <ScalePressable onPress={() => setDraftSearchQuery("")} pressedScale={0.9}>
                   <Ionicons name="close-circle" size={18} color={colors.textSoft} />
-                </Pressable>
+                </ScalePressable>
               ) : null}
+            </View>
+            <View style={styles.searchHintRow}>
+              <Ionicons name="sparkles-outline" size={14} color={colors.secondary} />
+              <Text style={styles.searchHintText}>Digite rua, numero e cidade para resultados mais precisos.</Text>
             </View>
 
             {buscandoLocais ? (
@@ -889,17 +974,18 @@ export default function CriarEncontro() {
                 {searchResults.map((result) => {
                   const preview = formatPlacePreview(result);
                   return (
-                    <Pressable
+                    <ScalePressable
                       key={result.place_id}
                       style={styles.searchResultItem}
                       onPress={() => handleSelectSearchResult(result)}
+                      pressedScale={0.985}
                     >
                       <Ionicons name="location-outline" size={18} color={colors.secondary} />
                       <View style={styles.searchResultCopy}>
                         <Text style={styles.searchResultTitle}>{preview.title}</Text>
                         <Text style={styles.searchResultSubtitle}>{preview.subtitle}</Text>
                       </View>
-                    </Pressable>
+                    </ScalePressable>
                   );
                 })}
               </ScrollView>
@@ -922,6 +1008,7 @@ export default function CriarEncontro() {
           </MapView>
 
           <View style={styles.mapSheet}>
+            <View style={styles.mapSheetHandle} />
             <Text style={styles.mapSheetTitle}>Endereco selecionado</Text>
             {resolvendoPin ? (
               <View style={styles.mapAddressLoadingRow}>
@@ -931,16 +1018,22 @@ export default function CriarEncontro() {
             ) : (
               <Text style={styles.mapSheetAddress}>{draftAddress}</Text>
             )}
+            <View style={styles.mapCoordinateChip}>
+              <Ionicons name="locate-outline" size={14} color={colors.secondary} />
+              <Text style={styles.mapCoordinateText}>
+                {`${draftCoordinate.latitude.toFixed(5)}, ${draftCoordinate.longitude.toFixed(5)}`}
+              </Text>
+            </View>
             <Text style={styles.mapSheetHint}>
               Se o resultado estiver perto, confirme. Se quiser mais precisao, arraste o pin antes de salvar o local.
             </Text>
             <View style={styles.mapSheetActions}>
-              <Pressable style={styles.secondaryActionButton} onPress={() => void pickCurrentLocation()}>
+              <ScalePressable style={styles.secondaryActionButton} onPress={() => void pickCurrentLocation()} pressedScale={0.97}>
                 <Text style={styles.secondaryActionButtonText}>Usar minha localizacao</Text>
-              </Pressable>
-              <Pressable style={styles.primaryActionButton} onPress={() => void confirmMapSelection()}>
+              </ScalePressable>
+              <ScalePressable style={styles.primaryActionButton} onPress={() => void confirmMapSelection()} pressedScale={0.97}>
                 <Text style={styles.primaryActionButtonText}>Confirmar local</Text>
-              </Pressable>
+              </ScalePressable>
             </View>
           </View>
         </SafeAreaView>
@@ -1055,6 +1148,27 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
   },
+  coverStatsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  coverStatChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.24)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  coverStatText: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: "700",
+  },
   progressCard: {
     borderRadius: 18,
     backgroundColor: colors.surface,
@@ -1082,6 +1196,62 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     lineHeight: 19,
     fontSize: 13,
+  },
+  progressBarTrack: {
+    marginTop: 2,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: colors.surfaceMuted,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    borderRadius: 999,
+    backgroundColor: colors.secondary,
+  },
+  progressMetaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8,
+  },
+  progressMetaText: {
+    color: colors.textSoft,
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  pendingChipsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  pendingChip: {
+    borderRadius: 999,
+    backgroundColor: colors.secondarySoft,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  pendingChipText: {
+    color: colors.secondary,
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  successPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 6,
+    borderRadius: 999,
+    backgroundColor: colors.accentSoft,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  successPillText: {
+    color: colors.accent,
+    fontSize: 11,
+    fontWeight: "700",
   },
   sectionCard: {
     borderRadius: 20,
@@ -1152,6 +1322,27 @@ const styles = StyleSheet.create({
   },
   locationPickerHeader: {
     gap: 12,
+  },
+  locationHighlights: {
+    gap: 8,
+  },
+  locationHighlightCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+  },
+  locationHighlightText: {
+    flex: 1,
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "600",
   },
   locationPickerCopy: {
     gap: 4,
@@ -1358,6 +1549,19 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     fontSize: 13,
   },
+  submitStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 2,
+  },
+  submitStatusText: {
+    flex: 1,
+    color: "rgba(255,255,255,0.86)",
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "600",
+  },
   mapModalContainer: {
     flex: 1,
     backgroundColor: colors.background,
@@ -1408,8 +1612,25 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 12,
   },
+  searchHintRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  searchHintText: {
+    flex: 1,
+    color: colors.textSoft,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "600",
+  },
   searchResultsList: {
     maxHeight: 220,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 12,
   },
   searchResultItem: {
     flexDirection: "row",
@@ -1445,6 +1666,14 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: colors.border,
   },
+  mapSheetHandle: {
+    alignSelf: "center",
+    width: 42,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: colors.borderStrong,
+    marginBottom: 4,
+  },
   mapSheetTitle: {
     color: colors.text,
     fontSize: 16,
@@ -1464,6 +1693,23 @@ const styles = StyleSheet.create({
   mapAddressLoadingText: {
     color: colors.textMuted,
     fontSize: 13,
+  },
+  mapCoordinateChip: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 999,
+    backgroundColor: colors.secondarySoft,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  mapCoordinateText: {
+    color: colors.secondary,
+    fontSize: 11,
+    fontWeight: "700",
   },
   mapSheetHint: {
     color: colors.textMuted,

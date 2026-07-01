@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Animated, Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthSession } from "./data/authStore";
+import ScalePressable from "./components/ScalePressable";
+import SkeletonBlock from "./components/SkeletonBlock";
 import { joinEncontro, leaveEncontro, loadEncontroById, useEncontros, useEncontrosStatus } from "./data/encontrosStore";
 import { type EncontroTipo } from "./data/mockEncontros";
 import AvaliacaoInfo, { getMedalhaAvaliacao } from "./components/AvaliacaoInfo";
+import { useEntranceAnimation } from "./hooks/useEntranceAnimation";
 import { friendsZoneTheme } from "./theme";
 
 const tipoLabel: Record<EncontroTipo, string> = {
@@ -25,6 +28,10 @@ const fallbackImageByTipo: Record<EncontroTipo, string> = {
 };
 
 export default function Detalhes() {
+  const heroAnimation = useEntranceAnimation({ delay: 40, distance: 18, scaleFrom: 0.995 });
+  const infoAnimation = useEntranceAnimation({ delay: 120, distance: 24, scaleFrom: 0.99 });
+  const contentAnimation = useEntranceAnimation({ delay: 200, distance: 28, scaleFrom: 0.99 });
+  const ctaAnimation = useEntranceAnimation({ delay: 290, distance: 28, scaleFrom: 0.99 });
   const session = useAuthSession();
   const encontros = useEncontros();
   const { isLoading, isInitialized } = useEncontrosStatus();
@@ -42,8 +49,21 @@ export default function Detalhes() {
   if ((!isInitialized || isLoading) && !encontro) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0066FF" />
-        
+        <Animated.View style={[styles.loadingSkeletonWrap, heroAnimation]}>
+          <SkeletonBlock style={styles.loadingHero} />
+          <View style={styles.loadingContent}>
+            <View style={styles.loadingBadges}>
+              <SkeletonBlock style={styles.loadingBadge} />
+              <SkeletonBlock style={[styles.loadingBadge, styles.loadingBadgeShort]} />
+            </View>
+            <SkeletonBlock style={styles.loadingTitle} />
+            <SkeletonBlock style={styles.loadingSubtitle} />
+            <SkeletonBlock style={styles.loadingCard} />
+            <SkeletonBlock style={styles.loadingTextLine} />
+            <SkeletonBlock style={[styles.loadingTextLine, styles.loadingTextLineShort]} />
+          </View>
+        </Animated.View>
+        <ActivityIndicator size="small" color="#0066FF" />
         <Text style={styles.loadingText}>Carregando encontro...</Text>
       </View>
     );
@@ -54,9 +74,9 @@ export default function Detalhes() {
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyTitle}>Encontro nao encontrado</Text>
         <Text style={styles.emptyText}>Esse encontro pode ter sido removido da lista local.</Text>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <ScalePressable style={styles.backButton} onPress={() => router.back()} pressedScale={0.97}>
           <Text style={styles.backButtonText}>Voltar</Text>
-        </Pressable>
+        </ScalePressable>
       </View>
     );
   }
@@ -96,43 +116,45 @@ export default function Detalhes() {
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.heroContainer}>
+        <Animated.View style={[styles.heroContainer, heroAnimation]}>
           <Image source={{ uri: imageSource }} style={styles.heroImage} />
-          <Pressable style={styles.heroBack} onPress={() => router.back()}>
+          <ScalePressable style={styles.heroBack} onPress={() => router.back()} pressedScale={0.94}>
             <Ionicons name="arrow-back" size={18} color="#0F172A" />
-          </Pressable>
-        </View>
+          </ScalePressable>
+        </Animated.View>
 
         <View style={styles.content}>
-          <View style={styles.badges}>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{tipoLabel[encontro.tipo]}</Text>
-            </View>
-            <View style={[styles.badge, encontro.preco === "gratis" ? styles.freeBadge : styles.paidBadge]}>
-              <Text style={[styles.badgeText, encontro.preco === "gratis" ? styles.freeText : styles.paidText]}>
-                {encontro.preco === "gratis" ? "Gratis" : "Pago"}
-              </Text>
-            </View>
-          </View>
-
-          <Text style={styles.title}>{encontro.titulo}</Text>
-          <Text style={styles.subtitle}>{`Friend: ${encontro.anfitriao}`}</Text>
-          {encontro.codigo ? (
-            <View style={styles.codeChip}>
-              <Ionicons name="qr-code-outline" size={14} color={friendsZoneTheme.colors.primary} />
-              <Text style={styles.codeChipText}>{`Codigo do encontro: ${encontro.codigo}`}</Text>
-            </View>
-          ) : null}
-          <View style={styles.ratingRow}>
-            <AvaliacaoInfo nota={encontro.nota} totalAvaliacoes={encontro.totalAvaliacoes} />
-            {medalha && (
-              <View style={styles.medalhaChip}>
-                <Text style={styles.medalhaText}>{medalha}</Text>
+          <Animated.View style={infoAnimation}>
+            <View style={styles.badges}>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{tipoLabel[encontro.tipo]}</Text>
               </View>
-            )}
-          </View>
+              <View style={[styles.badge, encontro.preco === "gratis" ? styles.freeBadge : styles.paidBadge]}>
+                <Text style={[styles.badgeText, encontro.preco === "gratis" ? styles.freeText : styles.paidText]}>
+                  {encontro.preco === "gratis" ? "Gratis" : "Pago"}
+                </Text>
+              </View>
+            </View>
 
-          <View style={styles.infoCard}>
+            <Text style={styles.title}>{encontro.titulo}</Text>
+            <Text style={styles.subtitle}>{`Friend: ${encontro.anfitriao}`}</Text>
+            {encontro.codigo ? (
+              <View style={styles.codeChip}>
+                <Ionicons name="qr-code-outline" size={14} color={friendsZoneTheme.colors.primary} />
+                <Text style={styles.codeChipText}>{`Codigo do encontro: ${encontro.codigo}`}</Text>
+              </View>
+            ) : null}
+            <View style={styles.ratingRow}>
+              <AvaliacaoInfo nota={encontro.nota} totalAvaliacoes={encontro.totalAvaliacoes} />
+              {medalha && (
+                <View style={styles.medalhaChip}>
+                  <Text style={styles.medalhaText}>{medalha}</Text>
+                </View>
+              )}
+            </View>
+          </Animated.View>
+
+          <Animated.View style={[styles.infoCard, contentAnimation]}>
             <View style={styles.infoRow}>
               <Ionicons name="calendar-outline" size={16} color="#475569" />
               <Text style={styles.infoText}>{`${encontro.data} as ${encontro.hora}`}</Text>
@@ -155,25 +177,27 @@ export default function Detalhes() {
                 {vagasRestantes > 0 ? `${vagasRestantes} vagas disponiveis` : "Encontro lotado"}
               </Text>
             </View>
-          </View>
+          </Animated.View>
 
-          <Text style={styles.sectionTitle}>Sobre o encontro</Text>
-          <Text style={styles.description}>{encontro.descricao}</Text>
-          <View style={styles.tagsRow}>
-            {encontro.comunidadeTags.map((tag) => (
-              <View key={tag} style={styles.tagChip}>
-                <Text style={styles.tagText}>{tag}</Text>
-              </View>
-            ))}
-          </View>
+          <Animated.View style={contentAnimation}>
+            <Text style={styles.sectionTitle}>Sobre o encontro</Text>
+            <Text style={styles.description}>{encontro.descricao}</Text>
+            <View style={styles.tagsRow}>
+              {encontro.comunidadeTags.map((tag) => (
+                <View key={tag} style={styles.tagChip}>
+                  <Text style={styles.tagText}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+          </Animated.View>
 
-          <View style={styles.ctaCard}>
+          <Animated.View style={[styles.ctaCard, ctaAnimation]}>
             {encontro.isOwner ? (
               <View style={[styles.ctaButton, styles.ownerButton]}>
                 <Text style={styles.ownerButtonText}>Voce esta organizando este encontro</Text>
               </View>
             ) : (
-              <Pressable
+              <ScalePressable
                 style={[
                   styles.ctaButton,
                   encontro.isJoined ? styles.leaveButton : styles.joinButton,
@@ -181,6 +205,7 @@ export default function Detalhes() {
                 ]}
                 disabled={(vagasRestantes <= 0 && !encontro.isJoined) || isSubmitting}
                 onPress={() => void handleJoinToggle()}
+                pressedScale={0.975}
               >
                 <Text style={[styles.ctaButtonText, encontro.isJoined && styles.leaveButtonText]}>
                   {isSubmitting
@@ -191,14 +216,14 @@ export default function Detalhes() {
                         ? "Encontro lotado"
                         : "Participar do encontro"}
                 </Text>
-              </Pressable>
+              </ScalePressable>
             )}
             <Text style={styles.ctaHint}>
               {encontro.isJoined
                 ? "Sua vaga esta confirmada. Se sair agora, outra pessoa podera ocupar esse lugar."
                 : "Entre para aparecer em Meus encontros e acompanhar a organizacao com o host."}
             </Text>
-          </View>
+          </Animated.View>
         </View>
       </ScrollView>
     </View>
@@ -423,6 +448,55 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
+    paddingHorizontal: 16,
+  },
+  loadingSkeletonWrap: {
+    width: "100%",
+    gap: 0,
+    borderRadius: 22,
+    overflow: "hidden",
+    backgroundColor: friendsZoneTheme.colors.surface,
+  },
+  loadingHero: {
+    width: "100%",
+    height: 260,
+    borderRadius: 0,
+  },
+  loadingContent: {
+    padding: 16,
+    gap: 12,
+  },
+  loadingBadges: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  loadingBadge: {
+    width: 96,
+    height: 28,
+    borderRadius: 999,
+  },
+  loadingBadgeShort: {
+    width: 74,
+  },
+  loadingTitle: {
+    width: "72%",
+    height: 26,
+  },
+  loadingSubtitle: {
+    width: "38%",
+    height: 16,
+  },
+  loadingCard: {
+    width: "100%",
+    height: 118,
+    borderRadius: 18,
+  },
+  loadingTextLine: {
+    width: "100%",
+    height: 14,
+  },
+  loadingTextLineShort: {
+    width: "58%",
   },
   loadingText: {
     color: friendsZoneTheme.colors.textMuted,

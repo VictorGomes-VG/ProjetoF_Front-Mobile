@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { FlatList, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Animated, FlatList, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useEncontros } from "../data/encontrosStore";
+import { useEncontros, useEncontrosStatus } from "../data/encontrosStore";
 import { type Encontro, type EncontroPreco, type EncontroTipo } from "../data/mockEncontros";
 import FloatingCreateButton from "../components/FloatingCreateButton";
+import SkeletonBlock from "../components/SkeletonBlock";
+import ScalePressable from "../components/ScalePressable";
 import AvaliacaoInfo, { getMedalhaAvaliacao } from "../components/AvaliacaoInfo";
 import { useUserLocation } from "../hooks/useUserLocation";
+import { useEntranceAnimation } from "../hooks/useEntranceAnimation";
 import { friendsZoneTheme } from "../theme";
 
 type TipoFiltro = "todos" | EncontroTipo;
@@ -92,77 +95,83 @@ const imageByTipo: Record<EncontroTipo, string> = {
   cafe: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80",
 };
 
-function CardEncontro({ item }: { item: Encontro }) {
+function CardEncontro({ item, index }: { item: Encontro; index: number }) {
   const vagasRestantes = item.capacidade - item.participantes;
   const statusVaga = vagasRestantes > 0 ? `${vagasRestantes} vagas` : "Lotado";
   const medalha = getMedalhaAvaliacao(item.nota, item.totalAvaliacoes);
+  const entrance = useEntranceAnimation({ delay: 80 + index * 70, distance: 22, scaleFrom: 0.985 });
 
   return (
-    <Pressable
-      style={styles.card}
-      onPress={() =>
-        router.push({
-          pathname: "/detalhes",
-          params: {
-            id: item.id,
-            nome: item.titulo,
-            tipo: labelTipo[item.tipo],
-            descricao: item.descricao,
-          },
-        })
-      }
-    >
-      <Image source={{ uri: imageByTipo[item.tipo] }} style={styles.image} />
-      <View style={styles.cardBody}>
-        <View style={styles.badgeRow}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{labelTipo[item.tipo]}</Text>
-          </View>
-          <View style={[styles.badge, item.preco === "gratis" ? styles.badgeFree : styles.badgePaid]}>
-            <Text style={[styles.badgeText, item.preco === "gratis" ? styles.badgeFreeText : styles.badgePaidText]}>
-              {item.preco === "gratis" ? "Gratis" : "Pago"}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.ratingRow}>
-          <AvaliacaoInfo nota={item.nota} totalAvaliacoes={item.totalAvaliacoes} />
-          {medalha && (
-            <View style={styles.medalhaChip}>
-              <Text style={styles.medalhaText}>{medalha}</Text>
+    <Animated.View style={entrance}>
+      <ScalePressable
+        style={styles.card}
+        onPress={() =>
+          router.push({
+            pathname: "/detalhes",
+            params: {
+              id: item.id,
+              nome: item.titulo,
+              tipo: labelTipo[item.tipo],
+              descricao: item.descricao,
+            },
+          })
+        }
+        pressedScale={0.985}
+      >
+        <Image source={{ uri: imageByTipo[item.tipo] }} style={styles.image} />
+        <View style={styles.cardBody}>
+          <View style={styles.badgeRow}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{labelTipo[item.tipo]}</Text>
             </View>
-          )}
-        </View>
-
-        <Text style={styles.title}>{item.titulo}</Text>
-        <Text style={styles.description} numberOfLines={2}>
-          {item.descricao}
-        </Text>
-        <View style={styles.communityRow}>
-          {item.comunidadeTags.slice(0, 3).map((tag) => (
-            <View key={`${item.id}-${tag}`} style={styles.communityChip}>
-              <Text style={styles.communityText}>{tag}</Text>
+            <View style={[styles.badge, item.preco === "gratis" ? styles.badgeFree : styles.badgePaid]}>
+              <Text style={[styles.badgeText, item.preco === "gratis" ? styles.badgeFreeText : styles.badgePaidText]}>
+                {item.preco === "gratis" ? "Gratis" : "Pago"}
+              </Text>
             </View>
-          ))}
-        </View>
+          </View>
+          <View style={styles.ratingRow}>
+            <AvaliacaoInfo nota={item.nota} totalAvaliacoes={item.totalAvaliacoes} />
+            {medalha && (
+              <View style={styles.medalhaChip}>
+                <Text style={styles.medalhaText}>{medalha}</Text>
+              </View>
+            )}
+          </View>
 
-        <View style={styles.infoRow}>
-          <Ionicons name="location-outline" size={14} color="#64748B" />
-          <Text style={styles.infoText}>{item.bairro}</Text>
-          <Ionicons name="time-outline" size={14} color="#64748B" />
-          <Text style={styles.infoText}>{`${item.data} | ${item.hora}`}</Text>
-        </View>
+          <Text style={styles.title}>{item.titulo}</Text>
+          <Text style={styles.description} numberOfLines={2}>
+            {item.descricao}
+          </Text>
+          <View style={styles.communityRow}>
+            {item.comunidadeTags.slice(0, 3).map((tag) => (
+              <View key={`${item.id}-${tag}`} style={styles.communityChip}>
+                <Text style={styles.communityText}>{tag}</Text>
+              </View>
+            ))}
+          </View>
 
-        <View style={styles.footerRow}>
-          <Text style={styles.hostText}>{`Friend: ${item.anfitriao}`}</Text>
-          <Text style={[styles.vagaText, vagasRestantes <= 2 && styles.vagaTextUrgente]}>{statusVaga}</Text>
+          <View style={styles.infoRow}>
+            <Ionicons name="location-outline" size={14} color="#64748B" />
+            <Text style={styles.infoText}>{item.bairro}</Text>
+            <Ionicons name="time-outline" size={14} color="#64748B" />
+            <Text style={styles.infoText}>{`${item.data} | ${item.hora}`}</Text>
+          </View>
+
+          <View style={styles.footerRow}>
+            <Text style={styles.hostText}>{`Friend: ${item.anfitriao}`}</Text>
+            <Text style={[styles.vagaText, vagasRestantes <= 2 && styles.vagaTextUrgente]}>{statusVaga}</Text>
+          </View>
         </View>
-      </View>
-    </Pressable>
+      </ScalePressable>
+    </Animated.View>
   );
 }
 
 export default function Home() {
+  const headerAnimation = useEntranceAnimation({ delay: 40, distance: 20, scaleFrom: 0.995 });
   const encontros = useEncontros();
+  const encontrosStatus = useEncontrosStatus();
   const { location: userLocation, isLoading: locationLoading, error: locationError } = useUserLocation();
   const pageSize = 4;
   const [modalFiltroAberto, setModalFiltroAberto] = useState(false);
@@ -289,7 +298,7 @@ export default function Home() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <Animated.View style={[styles.header, headerAnimation]}>
         <View style={styles.headerCopy}>
           <Text style={styles.eyebrow}>FriendsZone</Text>
           <Text style={styles.heading}>Friends Zones</Text>
@@ -302,7 +311,7 @@ export default function Home() {
                 : locationError || "Localizacao indisponivel (usando padrao)"}
           </Text>
         </View>
-        <Pressable style={styles.filterButton} onPress={() => setModalFiltroAberto(true)}>
+        <ScalePressable style={styles.filterButton} onPress={() => setModalFiltroAberto(true)} pressedScale={0.96}>
           <Ionicons name="options-outline" size={16} color="#0F172A" />
           <Text style={styles.filterButtonText}>Filtro</Text>
           {totalFiltrosAtivos > 0 && (
@@ -310,39 +319,76 @@ export default function Home() {
               <Text style={styles.filterBadgeText}>{totalFiltrosAtivos}</Text>
             </View>
           )}
-        </Pressable>
-      </View>
+        </ScalePressable>
+      </Animated.View>
+
+      {encontrosStatus.error ? (
+        <Animated.View style={[styles.statusBanner, headerAnimation]}>
+          <Ionicons
+            name={encontrosStatus.source === "mock" ? "cloud-offline-outline" : "information-circle-outline"}
+            size={16}
+            color={friendsZoneTheme.colors.secondary}
+          />
+          <Text style={styles.statusBannerText}>
+            {encontrosStatus.source === "mock"
+              ? "Modo offline ativo: exibindo encontros locais enquanto a API nao responde."
+              : encontrosStatus.error}
+          </Text>
+        </Animated.View>
+      ) : null}
 
       <FlatList
-        data={encontrosPaginados}
+        data={encontrosStatus.isLoading && !encontrosStatus.isInitialized ? [] : encontrosPaginados}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <CardEncontro item={item} />}
+        renderItem={({ item, index }) => <CardEncontro item={item} index={index} />}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          encontrosStatus.isLoading && !encontrosStatus.isInitialized ? (
+            <View style={styles.skeletonList}>
+              {Array.from({ length: 3 }, (_, index) => (
+                <View key={`skeleton-${index}`} style={styles.skeletonCard}>
+                  <SkeletonBlock style={styles.skeletonImage} />
+                  <View style={styles.skeletonBody}>
+                    <View style={styles.skeletonRow}>
+                      <SkeletonBlock style={styles.skeletonChip} />
+                      <SkeletonBlock style={[styles.skeletonChip, styles.skeletonChipShort]} />
+                    </View>
+                    <SkeletonBlock style={styles.skeletonTitle} />
+                    <SkeletonBlock style={styles.skeletonLine} />
+                    <SkeletonBlock style={[styles.skeletonLine, styles.skeletonLineShort]} />
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : null
+        }
         ListFooterComponent={
           <View style={styles.paginationWrap}>
             <Text style={styles.paginationInfo}>
               {`Pagina ${paginaAtual} de ${totalPaginas} - ${encontrosFiltrados.length} encontros`}
             </Text>
             <View style={styles.paginationActions}>
-              <Pressable
+              <ScalePressable
                 style={[styles.paginationButton, paginaAtual === 1 && styles.paginationButtonDisabled]}
                 onPress={() => setPaginaAtual((prev) => Math.max(1, prev - 1))}
                 disabled={paginaAtual === 1}
+                pressedScale={0.97}
               >
                 <Text style={[styles.paginationButtonText, paginaAtual === 1 && styles.paginationButtonTextDisabled]}>
                   Anterior
                 </Text>
-              </Pressable>
-              <Pressable
+              </ScalePressable>
+              <ScalePressable
                 style={[styles.paginationButtonPrimary, paginaAtual === totalPaginas && styles.paginationButtonDisabled]}
                 onPress={() => setPaginaAtual((prev) => Math.min(totalPaginas, prev + 1))}
                 disabled={paginaAtual === totalPaginas}
+                pressedScale={0.97}
               >
                 <Text style={[styles.paginationButtonPrimaryText, paginaAtual === totalPaginas && styles.paginationButtonTextDisabled]}>
                   Proxima
                 </Text>
-              </Pressable>
+              </ScalePressable>
             </View>
           </View>
         }
@@ -633,10 +679,73 @@ const styles = StyleSheet.create({
     paddingBottom: 210,
     gap: 14,
   },
+  statusBanner: {
+    marginHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 16,
+    backgroundColor: friendsZoneTheme.colors.primarySoft,
+    borderWidth: 1,
+    borderColor: friendsZoneTheme.colors.border,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  statusBannerText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 17,
+    color: friendsZoneTheme.colors.text,
+    fontWeight: "600",
+  },
   paginationWrap: {
     marginTop: 8,
     marginBottom: 10,
     gap: 10,
+  },
+  skeletonList: {
+    gap: 14,
+  },
+  skeletonCard: {
+    borderRadius: 22,
+    backgroundColor: friendsZoneTheme.colors.surface,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: friendsZoneTheme.colors.border,
+  },
+  skeletonImage: {
+    width: "100%",
+    height: 182,
+    borderRadius: 0,
+  },
+  skeletonBody: {
+    padding: 12,
+    gap: 10,
+  },
+  skeletonRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  skeletonChip: {
+    width: 92,
+    height: 28,
+    borderRadius: 999,
+  },
+  skeletonChipShort: {
+    width: 72,
+  },
+  skeletonTitle: {
+    width: "72%",
+    height: 20,
+  },
+  skeletonLine: {
+    width: "100%",
+    height: 14,
+  },
+  skeletonLineShort: {
+    width: "58%",
   },
   paginationInfo: {
     textAlign: "center",

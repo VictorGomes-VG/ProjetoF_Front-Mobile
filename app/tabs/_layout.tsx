@@ -1,7 +1,49 @@
+import { useEffect, useRef } from "react";
+import { Animated } from "react-native";
 import { Redirect, Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthSession } from "../data/authStore";
 import { friendsZoneTheme } from "../theme";
+
+function TabIcon({
+  focused,
+  color,
+  size,
+  activeName,
+  inactiveName,
+}: {
+  focused: boolean;
+  color: string;
+  size: number;
+  activeName: keyof typeof Ionicons.glyphMap;
+  inactiveName: keyof typeof Ionicons.glyphMap;
+}) {
+  const scale = useRef(new Animated.Value(focused ? 1 : 0.92)).current;
+  const translateY = useRef(new Animated.Value(focused ? -1 : 0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: focused ? 1.06 : 0.92,
+        friction: 7,
+        tension: 150,
+        useNativeDriver: true,
+      }),
+      Animated.spring(translateY, {
+        toValue: focused ? -1 : 0,
+        friction: 8,
+        tension: 140,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [focused, scale, translateY]);
+
+  return (
+    <Animated.View style={{ transform: [{ scale }, { translateY }] }}>
+      <Ionicons name={focused ? activeName : inactiveName} size={size} color={color} />
+    </Animated.View>
+  );
+}
 
 export default function Layout() {
   const session = useAuthSession();
@@ -47,7 +89,7 @@ export default function Layout() {
         options={{
           title: "Inicio",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "home" : "home-outline"} size={size} color={color} />
+            <TabIcon focused={focused} color={color} size={size} activeName="home" inactiveName="home-outline" />
           ),
         }}
       />
@@ -56,7 +98,7 @@ export default function Layout() {
         options={{
           title: "Buscar",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "search" : "search-outline"} size={size} color={color} />
+            <TabIcon focused={focused} color={color} size={size} activeName="search" inactiveName="search-outline" />
           ),
         }}
       />
@@ -65,7 +107,7 @@ export default function Layout() {
         options={{
           title: "Meus encontros",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "calendar" : "calendar-outline"} size={size} color={color} />
+            <TabIcon focused={focused} color={color} size={size} activeName="calendar" inactiveName="calendar-outline" />
           ),
         }}
       />
@@ -74,10 +116,12 @@ export default function Layout() {
         options={{
           title: "Mensagens",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "chatbubble-ellipses" : "chatbubble-ellipses-outline"}
-              size={size}
+            <TabIcon
+              focused={focused}
               color={color}
+              size={size}
+              activeName="chatbubble-ellipses"
+              inactiveName="chatbubble-ellipses-outline"
             />
           ),
         }}
@@ -87,7 +131,13 @@ export default function Layout() {
         options={{
           title: "Perfil",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "person-circle" : "person-circle-outline"} size={size} color={color} />
+            <TabIcon
+              focused={focused}
+              color={color}
+              size={size}
+              activeName="person-circle"
+              inactiveName="person-circle-outline"
+            />
           ),
         }}
       />
@@ -96,7 +146,7 @@ export default function Layout() {
         options={{
           title: "Menu",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? "menu" : "menu-outline"} size={size} color={color} />
+            <TabIcon focused={focused} color={color} size={size} activeName="menu" inactiveName="menu-outline" />
           ),
         }}
       />
