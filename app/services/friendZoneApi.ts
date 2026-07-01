@@ -76,6 +76,7 @@ export type AuthPayload = {
 };
 
 const API_PORT = 5085;
+const REQUEST_TIMEOUT_MS = 10000;
 let accessToken: string | null = null;
 
 function resolveBaseUrl() {
@@ -193,15 +194,32 @@ function getErrorMessage(payload: unknown, fallback: string) {
 async function requestJson<T>(path: string, init?: ApiRequestInit) {
   const headers = new Headers(init?.headers);
   headers.set("Content-Type", "application/json");
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   if (init?.auth && accessToken) {
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
-  const response = await fetch(`${resolveBaseUrl()}${path}`, {
-    ...init,
-    headers,
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${resolveBaseUrl()}${path}`, {
+      ...init,
+      headers,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error("A API demorou demais para responder. Confira se o backend esta rodando e acessivel na sua rede.");
+    }
+
+    throw error;
+  }
+
+  clearTimeout(timeoutId);
 
   if (!response.ok) {
     let payload: unknown = null;

@@ -6,6 +6,24 @@ export type UserLocationState = {
   longitude: number;
 } | null;
 
+const LOCATION_TIMEOUT_MS = 10000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string) {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+
+    promise
+      .then((value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
+}
+
 export function useUserLocation() {
   const [location, setLocation] = useState<UserLocationState>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,19 +37,25 @@ export function useUserLocation() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         setError("Permissao de localizacao negada.");
+        setLocation(null);
         return;
       }
 
-      const current = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      const current = await withTimeout(
+        Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        }),
+        LOCATION_TIMEOUT_MS,
+        "A localizacao demorou demais para responder."
+      );
 
       setLocation({
         latitude: current.coords.latitude,
         longitude: current.coords.longitude,
       });
-    } catch {
-      setError("Nao foi possivel obter sua localizacao.");
+    } catch (error) {
+      setLocation(null);
+      setError(error instanceof Error ? error.message : "Nao foi possivel obter sua localizacao.");
     } finally {
       setIsLoading(false);
     }

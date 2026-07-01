@@ -31,6 +31,7 @@ type RegisterInput = {
 
 const listeners = new Set<Listener>();
 const ACCESS_TOKEN_KEY = "friendszone.access_token";
+const SESSION_TIMEOUT_MS = 8000;
 
 let authState: AuthState = {
   user: null,
@@ -59,6 +60,22 @@ function subscribe(listener: Listener) {
 
 function getSnapshot() {
   return authState;
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string) {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+
+    promise
+      .then((value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
 }
 
 async function persistAccessToken(nextAccessToken: string | null) {
@@ -100,7 +117,11 @@ export async function initializeAuthSession() {
 
   pendingInitialization = (async () => {
     try {
-      const storedToken = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+      const storedToken = await withTimeout(
+        SecureStore.getItemAsync(ACCESS_TOKEN_KEY),
+        SESSION_TIMEOUT_MS,
+        "A leitura da sessao demorou demais."
+      );
 
       if (!storedToken) {
         setApiAccessToken(null);
@@ -115,7 +136,11 @@ export async function initializeAuthSession() {
       }
 
       setApiAccessToken(storedToken);
-      const user = await fetchCurrentUser();
+      const user = await withTimeout(
+        fetchCurrentUser(),
+        SESSION_TIMEOUT_MS,
+        "A restauracao da sessao demorou demais."
+      );
       setState({
         user,
         accessToken: storedToken,
